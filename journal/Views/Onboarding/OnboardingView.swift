@@ -5,16 +5,49 @@ struct OnboardingView: View {
     @State private var currentStep = 0
     @State private var selectedIdeologies: Set<String> = []
     @State private var lifeCheckText = ""
+    @State private var selectedPerspective: String? = nil
+    
+    private var canContinue: Bool {
+        switch currentStep {
+        case 0: // Welcome step
+            return true
+        case 1: // Life check step
+            return !lifeCheckText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        case 2: // Perspective step
+            return selectedPerspective != nil
+        case 3: // Philosophy word cloud
+            return selectedIdeologies.count >= 3 && selectedIdeologies.count <= 5
+        default:
+            return false
+        }
+    }
     
     var body: some View {
         VStack(alignment: .leading, spacing: 30) {
-            // Progress indicator
-            HStack(spacing: 8) {
-                ForEach(0..<4) { index in
-                    RoundedRectangle(cornerRadius: Theme.cornerRadius / 2)
-                        .fill(currentStep >= index ? Theme.accentColor : Theme.cardBackground)
-                        .frame(height: 4)
+            // Progress and back button
+            HStack {
+                if currentStep > 0 {
+                    Button(action: { currentStep -= 1 }) {
+                        Image(systemName: "chevron.left")
+                            .foregroundColor(Theme.textPrimary)
+                            .imageScale(.large)
+                    }
+                    .padding(.leading, Theme.screenPadding)
                 }
+                
+                Spacer()
+                
+                // Progress indicator
+                HStack(spacing: 8) {
+                    ForEach(0..<4) { index in
+                        RoundedRectangle(cornerRadius: Theme.cornerRadius / 2)
+                            .fill(currentStep >= index ? Theme.accentColor : Theme.cardBackground)
+                            .frame(height: 4)
+                    }
+                }
+                .frame(width: 120)
+                
+                Spacer()
             }
             .padding(.horizontal, Theme.screenPadding)
             .padding(.top, Theme.screenPadding)
@@ -31,6 +64,17 @@ struct OnboardingView: View {
                         perspectiveStep
                     case 3:
                         PhilosophyWordCloud(selectedTraits: $selectedIdeologies)
+                            .overlay(
+                                VStack {
+                                    Spacer()
+                                    if !canContinue {
+                                        Text("Select 3-5 words")
+                                            .font(Theme.captionStyle)
+                                            .foregroundColor(Theme.textSecondary)
+                                            .padding(.vertical, 8)
+                                    }
+                                }
+                            )
                     default:
                         EmptyView()
                     }
@@ -48,14 +92,15 @@ struct OnboardingView: View {
                     hasCompletedOnboarding = true
                 }
             }) {
-                Text(currentStep < 3 ? "continue" : "get started")
+                Text(currentStep < 3 ? "Continue" : "Get Started")
                     .font(Theme.bodyStyle)
                     .foregroundColor(Theme.textPrimary)
                     .frame(maxWidth: .infinity)
                     .padding()
-                    .background(Theme.buttonStyle(isProminent: true))
+                    .background(canContinue ? Theme.accentColor : Theme.cardBackground)
                     .cornerRadius(Theme.cornerRadius)
             }
+            .disabled(!canContinue)
             .padding(.horizontal, Theme.screenPadding)
             .padding(.bottom, Theme.screenPadding)
         }
@@ -65,7 +110,7 @@ struct OnboardingView: View {
     
     private var welcomeStep: some View {
         VStack(alignment: .leading, spacing: 20) {
-            Text("welcome.")
+            Text("welcome")
                 .font(Theme.headerStyle)
                 .foregroundColor(Theme.textPrimary)
             
@@ -107,13 +152,13 @@ struct OnboardingView: View {
             
             VStack(spacing: 12) {
                 ForEach(["yes", "sometimes", "no"], id: \.self) { option in
-                    Button(action: { currentStep += 1 }) {
+                    Button(action: { selectedPerspective = option }) {
                         Text(option)
                             .font(Theme.bodyStyle)
                             .foregroundColor(Theme.textPrimary)
                             .frame(maxWidth: .infinity)
                             .padding()
-                            .background(Theme.cardBackground)
+                            .background(selectedPerspective == option ? Theme.accentColor : Theme.cardBackground)
                             .cornerRadius(Theme.cornerRadius)
                     }
                 }

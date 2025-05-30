@@ -3,51 +3,61 @@ import SwiftUI
 struct SignInView: View {
     @AppStorage("isSignedIn") private var isSignedIn = false
     @AppStorage("isGuestUser") private var isGuestUser = false
+    @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
     @State private var email = ""
     @State private var password = ""
     
     var body: some View {
-        VStack(spacing: 25) {
-            Text("welcome back")
-                .font(Theme.headerStyle)
-                .foregroundColor(Theme.textPrimary)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.top, Theme.screenPadding)
-            
-            VStack(spacing: 15) {
-                TextField("email", text: $email)
-                    .textFieldStyle(CustomTextFieldStyle())
-                    .textContentType(.emailAddress)
-                    .autocapitalization(.none)
+        ZStack(alignment: .bottomLeading) {
+            VStack(spacing: 25) {
+                Text("welcome back")
+                    .font(Theme.headerStyle)
+                    .foregroundColor(Theme.textPrimary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.top, Theme.screenPadding)
                 
-                SecureField("password", text: $password)
-                    .textFieldStyle(CustomTextFieldStyle())
-                    .textContentType(.password)
+                VStack(spacing: 15) {
+                    TextField("email", text: $email)
+                        .textFieldStyle(CustomTextFieldStyle())
+                        .textContentType(.emailAddress)
+                        .autocapitalization(.none)
+                    
+                    SecureField("password", text: $password)
+                        .textFieldStyle(CustomTextFieldStyle())
+                        .textContentType(.password)
+                }
+                
+                Button(action: signIn) {
+                    Text("sign in")
+                        .font(Theme.bodyStyle)
+                        .foregroundColor(Theme.textPrimary)
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Theme.buttonStyle(isProminent: true))
+                        .cornerRadius(Theme.cornerRadius)
+                }
+                
+                Button(action: continueAsGuest) {
+                    Text("continue as guest")
+                        .font(Theme.bodyStyle)
+                        .foregroundColor(Theme.textPrimary)
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Theme.buttonStyle())
+                        .cornerRadius(Theme.cornerRadius)
+                }
+                
+                Spacer()
             }
+            .padding(Theme.screenPadding)
             
-            Button(action: signIn) {
-                Text("sign in")
-                    .font(Theme.bodyStyle)
-                    .foregroundColor(Theme.textPrimary)
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(Theme.buttonStyle(isProminent: true))
-                    .cornerRadius(Theme.cornerRadius)
+            Button(action: { hasCompletedOnboarding = false }) {
+                Image(systemName: "chevron.left")
+                    .foregroundColor(Theme.textSecondary)
+                    .imageScale(.large)
+                    .padding(20)
             }
-            
-            Button(action: continueAsGuest) {
-                Text("continue as guest")
-                    .font(Theme.bodyStyle)
-                    .foregroundColor(Theme.textPrimary)
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(Theme.buttonStyle())
-                    .cornerRadius(Theme.cornerRadius)
-            }
-            
-            Spacer()
         }
-        .padding(Theme.screenPadding)
         .background(Theme.backgroundColor)
     }
     
