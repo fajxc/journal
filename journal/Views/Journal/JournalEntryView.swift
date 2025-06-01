@@ -94,6 +94,25 @@ struct JournalEntryView: View {
         }
         .background(Theme.backgroundColor)
         .navigationBarTitleDisplayMode(.inline)
+        .navigationBarBackButtonHidden(true)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button(action: { dismiss() }) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "chevron.left")
+                            .foregroundColor(Theme.textSecondary)
+                            .imageScale(.large)
+                        Text("home")
+                            .foregroundColor(Theme.textSecondary)
+                            .font(Theme.bodyStyle)
+                    }
+                    .padding(.vertical, 4)
+                    .padding(.horizontal, 8)
+                    .background(Color.clear)
+                }
+            }
+        }
+        .tint(Theme.textSecondary)
     }
     
     private func saveEntry() {
@@ -104,7 +123,13 @@ struct JournalEntryView: View {
             prompt: prompt
         )
         viewModel.addEntry(entry)
-        
+        Task {
+            do {
+                try await JournalService().uploadEntry(entry)
+            } catch {
+                print("Failed to upload entry to Supabase: \(error)")
+            }
+        }
         // Switch to insights tab
         tabViewModel.selectedTab = .insights
         dismiss()

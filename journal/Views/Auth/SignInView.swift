@@ -6,6 +6,7 @@ struct SignInView: View {
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
     @State private var email = ""
     @State private var password = ""
+    @State private var errorMessage = ""
     
     var body: some View {
         ZStack(alignment: .bottomLeading) {
@@ -37,6 +38,16 @@ struct SignInView: View {
                         .cornerRadius(Theme.cornerRadius)
                 }
                 
+                Button(action: signUp) {
+                    Text("create account")
+                        .font(Theme.bodyStyle)
+                        .foregroundColor(Theme.textPrimary)
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Theme.cardBackground)
+                        .cornerRadius(Theme.cornerRadius)
+                }
+                
                 Button(action: continueAsGuest) {
                     Text("continue as guest")
                         .font(Theme.bodyStyle)
@@ -45,6 +56,14 @@ struct SignInView: View {
                         .padding()
                         .background(Theme.buttonStyle())
                         .cornerRadius(Theme.cornerRadius)
+                }
+                
+                if !errorMessage.isEmpty {
+                    Text(errorMessage)
+                        .foregroundColor(.red)
+                        .font(.caption)
+                        .multilineTextAlignment(.center)
+                        .padding(.top, 8)
                 }
                 
                 Spacer()
@@ -62,12 +81,55 @@ struct SignInView: View {
     }
     
     private func signIn() {
-        // TODO: Implement actual sign in logic
-        isSignedIn = true
+        errorMessage = ""
+        Task {
+            do {
+                try await SupabaseManager.shared.signIn(email: email, password: password)
+                if let userId = SupabaseManager.shared.userId {
+                    print("[AUTH] Logged in as: \(userId)")
+                    isSignedIn = true
+                } else {
+                    errorMessage = "Failed to sign in. Please check your email or create a new account."
+                }
+            } catch {
+                errorMessage = error.localizedDescription
+            }
+        }
+    }
+    
+    private func signUp() {
+        errorMessage = ""
+        Task {
+            do {
+                try await SupabaseManager.shared.signUp(email: email, password: password)
+                if let userId = SupabaseManager.shared.userId {
+                    print("[AUTH] Created user: \(userId)")
+                    isSignedIn = true
+                } else {
+                    errorMessage = "Failed to create account. Please try again."
+                }
+            } catch {
+                errorMessage = error.localizedDescription
+            }
+        }
     }
     
     private func continueAsGuest() {
-        isGuestUser = true
+        errorMessage = ""
+        Task {
+            do {
+                try await SupabaseManager.shared.signInAsGuest()
+                if let userId = SupabaseManager.shared.userId {
+                    print("[AUTH] Guest session started: \(userId)")
+                    isGuestUser = true
+                    isSignedIn = true
+                } else {
+                    errorMessage = "Failed to start guest session."
+                }
+            } catch {
+                errorMessage = error.localizedDescription
+            }
+        }
     }
 }
 

@@ -175,6 +175,30 @@ struct InsightsView: View {
                 .padding(.horizontal, Theme.screenPadding)
             }
             .padding(.vertical, Theme.screenPadding)
+            // DEBUG/TEST BUTTONS
+            VStack(spacing: 12) {
+                Button("Test POST to Supabase") {
+                    Task {
+                        await JournalService().testPostEntryToSupabase()
+                    }
+                }
+                .font(.caption)
+                .foregroundColor(.white)
+                .padding(8)
+                .background(Color.blue.opacity(0.7))
+                .cornerRadius(8)
+                Button("Test FETCH from Supabase") {
+                    Task {
+                        await JournalService().testFetchRecentEntries()
+                    }
+                }
+                .font(.caption)
+                .foregroundColor(.white)
+                .padding(8)
+                .background(Color.green.opacity(0.7))
+                .cornerRadius(8)
+            }
+            .padding(.top, 24)
         }
         .background(Theme.backgroundColor)
         .alert("Sign Out", isPresented: $showingLogoutAlert) {

@@ -6,11 +6,22 @@
 //
 
 import SwiftUI
+import UIKit
 
 @main
 struct JournalApp: App {
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
     @AppStorage("isGuestUser") private var isGuestUser = false
+    
+    init() {
+        let appearance = UINavigationBarAppearance()
+        appearance.configureWithOpaqueBackground()
+        appearance.titleTextAttributes = [.foregroundColor: UIColor(Theme.textSecondary)]
+        appearance.largeTitleTextAttributes = [.foregroundColor: UIColor(Theme.textSecondary)]
+        UINavigationBar.appearance().standardAppearance = appearance
+        UINavigationBar.appearance().scrollEdgeAppearance = appearance
+        UINavigationBar.appearance().tintColor = UIColor(Theme.textSecondary)
+    }
     
     var body: some Scene {
         WindowGroup {

@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct ReflectionTopicView: View {
+    @Binding var isPresented: Bool
     @Environment(\.dismiss) private var dismiss
     @State private var selectedTopic: ReflectionTopic?
     
@@ -21,10 +22,23 @@ struct ReflectionTopicView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button(action: { dismiss() }) {
-                        Image(systemName: "chevron.left")
-                            .foregroundColor(Theme.textSecondary)
-                            .imageScale(.large)
+                    Button(action: {
+                        withAnimation(.easeInOut(duration: 0.3)) {
+                            isPresented = false
+                        }
+                    }) {
+                        HStack(spacing: 4) {
+                            Image(systemName: "chevron.left")
+                                .foregroundColor(Theme.textSecondary)
+                                .imageScale(.large)
+                            Text("home")
+                                .foregroundColor(Theme.textSecondary)
+                                .font(Theme.bodyStyle)
+                        }
+                        .padding(.vertical, 4)
+                        .padding(.horizontal, 8)
+                        .background(Color.clear)
+                        .transition(.opacity.combined(with: .scale))
                     }
                 }
             }
@@ -49,6 +63,6 @@ struct TopicCard: View {
 }
 
 #Preview {
-    ReflectionTopicView()
+    ReflectionTopicView(isPresented: .constant(true))
         .environmentObject(JournalViewModel())
 } 

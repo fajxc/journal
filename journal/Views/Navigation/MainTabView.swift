@@ -60,7 +60,7 @@ struct MainTabView: View {
                         showingNewEntry = false
                     }
                 
-                ReflectionTopicView()
+                ReflectionTopicView(isPresented: $showingNewEntry)
                     .environmentObject(journalViewModel)
                     .environmentObject(viewModel)
                     .transition(.move(edge: .bottom))

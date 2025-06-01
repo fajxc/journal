@@ -64,7 +64,7 @@ struct JournalView: View {
                 }
             }
             .sheet(isPresented: $showingNewEntry) {
-                ReflectionTopicView()
+                ReflectionTopicView(isPresented: $showingNewEntry)
                     .environmentObject(viewModel)
                     .environmentObject(tabViewModel)
             }

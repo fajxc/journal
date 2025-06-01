@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ReflectionPromptView: View {
     let topic: ReflectionTopic
+    @Environment(\.dismiss) private var dismiss
     
     var body: some View {
         ScrollView {
@@ -17,6 +18,25 @@ struct ReflectionPromptView: View {
         .background(Theme.backgroundColor)
         .navigationTitle(topic.title)
         .navigationBarTitleDisplayMode(.inline)
+        .navigationBarBackButtonHidden(true)
+        .tint(Theme.textSecondary)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button(action: { dismiss() }) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "chevron.left")
+                            .foregroundColor(Theme.textSecondary)
+                            .imageScale(.large)
+                        Text("home")
+                            .foregroundColor(Theme.textSecondary)
+                            .font(Theme.bodyStyle)
+                    }
+                    .padding(.vertical, 4)
+                    .padding(.horizontal, 8)
+                    .background(Color.clear)
+                }
+            }
+        }
     }
 }
 
