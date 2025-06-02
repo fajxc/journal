@@ -14,13 +14,101 @@ final class SupabaseManager {
     // MARK: - Auth
     
     struct AuthResponse: Codable {
-        let access_token: String?
+        let accessToken: String?
+        let tokenType: String?
+        let expiresIn: Int?
+        let expiresAt: Int?
+        let refreshToken: String?
         let user: User?
+
+        enum CodingKeys: String, CodingKey {
+            case accessToken = "access_token"
+            case tokenType = "token_type"
+            case expiresIn = "expires_in"
+            case expiresAt = "expires_at"
+            case refreshToken = "refresh_token"
+            case user
+        }
     }
-    
+
     struct User: Codable {
-        let id: String
+        let id: String?
+        let aud: String?
+        let role: String?
         let email: String?
+        let emailConfirmedAt: String?
+        let phone: String?
+        let lastSignInAt: String?
+        let appMetadata: AppMetadata?
+        let userMetadata: UserMetadata?
+        let identities: [Identity]?
+        let createdAt: String?
+        let updatedAt: String?
+        let isAnonymous: Bool?
+
+        enum CodingKeys: String, CodingKey {
+            case id, aud, role, email, phone, identities
+            case emailConfirmedAt = "email_confirmed_at"
+            case lastSignInAt = "last_sign_in_at"
+            case appMetadata = "app_metadata"
+            case userMetadata = "user_metadata"
+            case createdAt = "created_at"
+            case updatedAt = "updated_at"
+            case isAnonymous = "is_anonymous"
+        }
+    }
+
+    struct AppMetadata: Codable {
+        let provider: String
+        let providers: [String]
+    }
+
+    struct UserMetadata: Codable {
+        let email: String
+        let emailVerified: Bool
+        let phoneVerified: Bool
+        let sub: String
+
+        enum CodingKeys: String, CodingKey {
+            case email, sub
+            case emailVerified = "email_verified"
+            case phoneVerified = "phone_verified"
+        }
+    }
+
+    struct Identity: Codable {
+        let identityId: String
+        let id: String
+        let userId: String
+        let identityData: IdentityData
+        let provider: String
+        let lastSignInAt: String
+        let createdAt: String
+        let updatedAt: String
+        let email: String
+
+        enum CodingKeys: String, CodingKey {
+            case id, provider, email
+            case identityId = "identity_id"
+            case userId = "user_id"
+            case identityData = "identity_data"
+            case lastSignInAt = "last_sign_in_at"
+            case createdAt = "created_at"
+            case updatedAt = "updated_at"
+        }
+    }
+
+    struct IdentityData: Codable {
+        let email: String
+        let emailVerified: Bool
+        let phoneVerified: Bool
+        let sub: String
+
+        enum CodingKeys: String, CodingKey {
+            case email, sub
+            case emailVerified = "email_verified"
+            case phoneVerified = "phone_verified"
+        }
     }
     
     struct SignUpResponse: Codable {
@@ -42,12 +130,12 @@ final class SupabaseManager {
         print("[AUTH DEBUG] Request headers: \(request.allHTTPHeaderFields ?? [:])")
         do {
             let (data, _) = try await URLSession.shared.data(for: request)
-            let response = try JSONDecoder().decode(SignUpResponse.self, from: data)
+            let response = try JSONDecoder().decode(AuthResponse.self, from: data)
             print("[AUTH DEBUG] signUp response: \(String(data: data, encoding: .utf8) ?? "nil")")
-            print("[AUTH DEBUG] user id: \(String(describing: response.id))")
-            print("[AUTH DEBUG] access_token: \(String(describing: response.access_token))")
-            self.userId = response.id
-            self.accessToken = response.access_token
+            print("[AUTH DEBUG] user id: \(String(describing: response.user?.id))")
+            print("[AUTH DEBUG] access_token: \(String(describing: response.accessToken))")
+            self.userId = response.user?.id
+            self.accessToken = response.accessToken
             if self.userId == nil {
                 print("[AUTH ERROR] No user ID returned after signUp. Not proceeding.")
                 return
@@ -74,8 +162,8 @@ final class SupabaseManager {
             let response = try JSONDecoder().decode(AuthResponse.self, from: data)
             print("[AUTH DEBUG] signIn response: \(String(data: data, encoding: .utf8) ?? "nil")")
             print("[AUTH DEBUG] user: \(String(describing: response.user))")
-            print("[AUTH DEBUG] access_token: \(String(describing: response.access_token))")
-            self.accessToken = response.access_token
+            print("[AUTH DEBUG] access_token: \(String(describing: response.accessToken))")
+            self.accessToken = response.accessToken
             self.userId = response.user?.id
             if self.userId == nil {
                 print("[AUTH ERROR] No user ID returned after signIn. Not proceeding.")
