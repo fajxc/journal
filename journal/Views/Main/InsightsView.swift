@@ -206,6 +206,7 @@ struct InsightsView: View {
             Button("Sign Out", role: .destructive) {
                 isSignedIn = false
                 isGuestUser = false
+                SupabaseManager.shared.logout()
             }
         } message: {
             Text("Are you sure you want to sign out?")

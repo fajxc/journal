@@ -9,7 +9,13 @@ final class SupabaseManager {
     private(set) var accessToken: String?
     private(set) var userId: String?
     
-    private init() {}
+    private let accessTokenKey = "supabase_access_token"
+    private let refreshTokenKey = "supabase_refresh_token"
+    private let userIdKey = "supabase_user_id"
+    
+    private init() {
+        restoreSession()
+    }
     
     // MARK: - Auth
     
@@ -117,6 +123,30 @@ final class SupabaseManager {
         let access_token: String?
     }
     
+    // MARK: - Session Persistence
+    private func persistSession(accessToken: String?, refreshToken: String?, userId: String?) {
+        let defaults = UserDefaults.standard
+        defaults.set(accessToken, forKey: accessTokenKey)
+        defaults.set(refreshToken, forKey: refreshTokenKey)
+        defaults.set(userId, forKey: userIdKey)
+    }
+
+    private func clearSession() {
+        let defaults = UserDefaults.standard
+        defaults.removeObject(forKey: accessTokenKey)
+        defaults.removeObject(forKey: refreshTokenKey)
+        defaults.removeObject(forKey: userIdKey)
+        self.accessToken = nil
+        self.userId = nil
+    }
+
+    func restoreSession() {
+        let defaults = UserDefaults.standard
+        self.accessToken = defaults.string(forKey: accessTokenKey)
+        self.userId = defaults.string(forKey: userIdKey)
+        // Optionally, you can add refreshToken if you implement refresh logic
+    }
+    
     // Sign up
     func signUp(email: String, password: String) async throws {
         print("[AUTH DEBUG] Attempting signUp with: email=\(email), password=\(password)")
@@ -136,6 +166,7 @@ final class SupabaseManager {
             print("[AUTH DEBUG] access_token: \(String(describing: response.accessToken))")
             self.userId = response.user?.id
             self.accessToken = response.accessToken
+            self.persistSession(accessToken: response.accessToken, refreshToken: response.refreshToken, userId: response.user?.id)
             if self.userId == nil {
                 print("[AUTH ERROR] No user ID returned after signUp. Not proceeding.")
                 return
@@ -169,6 +200,7 @@ final class SupabaseManager {
             print("[AUTH DEBUG] access_token: \(String(describing: authResponse.accessToken))")
             self.accessToken = authResponse.accessToken
             self.userId = authResponse.user?.id
+            self.persistSession(accessToken: authResponse.accessToken, refreshToken: authResponse.refreshToken, userId: authResponse.user?.id)
             if self.userId == nil {
                 print("[AUTH ERROR] No user ID returned after signIn. Not proceeding.")
                 return
@@ -191,6 +223,7 @@ final class SupabaseManager {
         do {
             try await signUp(email: email, password: password)
             if let userId = self.userId, let accessToken = self.accessToken {
+                self.persistSession(accessToken: accessToken, refreshToken: nil, userId: userId)
                 print("[AUTH] Guest sign up succeeded: \(userId)")
             } else {
                 print("[AUTH ERROR] No user ID or session returned after guest signUp. Not proceeding.")
@@ -199,5 +232,10 @@ final class SupabaseManager {
             print("[AUTH ERROR] Guest signUp error: \(error.localizedDescription)")
             throw error
         }
+    }
+
+    // Call this on logout
+    func logout() {
+        clearSession()
     }
 } 

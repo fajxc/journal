@@ -12,6 +12,7 @@ import UIKit
 struct JournalApp: App {
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
     @AppStorage("isGuestUser") private var isGuestUser = false
+    @AppStorage("isSignedIn") private var isSignedIn = false
     
     init() {
         let appearance = UINavigationBarAppearance()
@@ -21,6 +22,15 @@ struct JournalApp: App {
         UINavigationBar.appearance().standardAppearance = appearance
         UINavigationBar.appearance().scrollEdgeAppearance = appearance
         UINavigationBar.appearance().tintColor = UIColor(Theme.textSecondary)
+        
+        // Restore session on app launch
+        SupabaseManager.shared.restoreSession()
+        if let _ = SupabaseManager.shared.accessToken, let _ = SupabaseManager.shared.userId {
+            isSignedIn = true
+        } else {
+            isSignedIn = false
+            isGuestUser = false
+        }
     }
     
     var body: some Scene {
