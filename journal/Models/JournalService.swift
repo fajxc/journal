@@ -11,7 +11,7 @@ struct SupabaseJournalEntry: Codable {
 }
 
 final class JournalService {
-    private let supabaseUrl = URL(string: "https://jthhvjlqhryhocnbwqff.supabase.co/rest/v1/journal_entries")!
+    private let supabaseUrl = URL(string: "https://jthhvjlqhryhocnbwqff.supabase.co/rest/v1/journal")!
     private let anonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp0aGh2amxxaHJ5aG9jbmJ3cWZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg3NDYyMjQsImV4cCI6MjA2NDMyMjIyNH0.VaHcP4KgZUeCe7gaoi6lAybku3x-o6fSJS7fKBhFql0"
     
     // Upload a journal entry
@@ -22,7 +22,7 @@ final class JournalService {
         var request = URLRequest(url: supabaseUrl)
         request.httpMethod = "POST"
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.addValue("Bearer \(anonKey)", forHTTPHeaderField: "apikey")
+        request.addValue(anonKey, forHTTPHeaderField: "apikey")
         request.addValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
         let supabaseEntry = SupabaseJournalEntry(
             id: nil,
@@ -33,9 +33,31 @@ final class JournalService {
             prompt: entry.prompt?.shortTitle,
             created_at: nil
         )
-        request.httpBody = try JSONEncoder().encode([supabaseEntry])
+        let body = try JSONEncoder().encode([supabaseEntry])
+        print("[DEBUG] user_id: \(userId)")
+        print("[DEBUG] Upload body: \(String(data: body, encoding: .utf8) ?? "")")
+        request.httpBody = body
         let (_, response) = try await URLSession.shared.data(for: request)
         guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 201 else {
+            // Try minimal insert if full insert fails
+            let minimalEntry: [String: Any] = [
+                "user_id": userId,
+                "title": entry.title,
+                "content": entry.content,
+                "mood": entry.mood
+            ]
+            let minimalBody = try JSONSerialization.data(withJSONObject: [minimalEntry])
+            print("[DEBUG] Minimal upload body: \(String(data: minimalBody, encoding: .utf8) ?? "")")
+            request.httpBody = minimalBody
+            let (_, minimalResponse) = try await URLSession.shared.data(for: request)
+            if let minimalHttpResponse = minimalResponse as? HTTPURLResponse {
+                if minimalHttpResponse.statusCode == 201 {
+                    return
+                } else {
+                    throw NSError(domain: "Upload failed", code: minimalHttpResponse.statusCode)
+                }
+            }
+            // If we can't get a status code, throw a generic error
             throw NSError(domain: "Upload failed", code: 500)
         }
     }
@@ -53,7 +75,7 @@ final class JournalService {
         var request = URLRequest(url: components.url!)
         request.httpMethod = "GET"
         request.addValue("application/json", forHTTPHeaderField: "Accept")
-        request.addValue("Bearer \(anonKey)", forHTTPHeaderField: "apikey")
+        request.addValue(anonKey, forHTTPHeaderField: "apikey")
         request.addValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
         let (data, response) = try await URLSession.shared.data(for: request)
         guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
@@ -84,7 +106,7 @@ final class JournalService {
         var request = URLRequest(url: supabaseUrl)
         request.httpMethod = "POST"
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.addValue("Bearer \(anonKey)", forHTTPHeaderField: "apikey")
+        request.addValue(anonKey, forHTTPHeaderField: "apikey")
         request.addValue("Bearer \(accessToken!)", forHTTPHeaderField: "Authorization")
         let testEntry = SupabaseJournalEntry(
             id: nil,
@@ -127,7 +149,7 @@ final class JournalService {
         var request = URLRequest(url: components.url!)
         request.httpMethod = "GET"
         request.addValue("application/json", forHTTPHeaderField: "Accept")
-        request.addValue("Bearer \(anonKey)", forHTTPHeaderField: "apikey")
+        request.addValue(anonKey, forHTTPHeaderField: "apikey")
         request.addValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
         do {
             let (data, response) = try await URLSession.shared.data(for: request)
