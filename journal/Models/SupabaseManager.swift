@@ -149,7 +149,7 @@ final class SupabaseManager {
     // Sign in
     func signIn(email: String, password: String) async throws {
         print("[AUTH DEBUG] Attempting signIn with: email=\(email), password=\(password)")
-        let url = projectUrl.appendingPathComponent("auth/v1/token?grant_type=password")
+        let url = URL(string: "https://jthhvjlqhryhocnbwqff.supabase.co/auth/v1/token?grant_type=password")!
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -158,13 +158,17 @@ final class SupabaseManager {
         request.httpBody = try JSONEncoder().encode(body)
         print("[AUTH DEBUG] Request headers: \(request.allHTTPHeaderFields ?? [:])")
         do {
-            let (data, _) = try await URLSession.shared.data(for: request)
-            let response = try JSONDecoder().decode(AuthResponse.self, from: data)
-            print("[AUTH DEBUG] signIn response: \(String(data: data, encoding: .utf8) ?? "nil")")
-            print("[AUTH DEBUG] user: \(String(describing: response.user))")
-            print("[AUTH DEBUG] access_token: \(String(describing: response.accessToken))")
-            self.accessToken = response.accessToken
-            self.userId = response.user?.id
+            let (data, response) = try await URLSession.shared.data(for: request)
+            print("[AUTH DEBUG] Raw sign-in response: \(String(data: data, encoding: .utf8) ?? "nil")")
+            if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode != 200 {
+                print("[AUTH ERROR] Non-200 response: \(httpResponse.statusCode)")
+                return
+            }
+            let authResponse = try JSONDecoder().decode(AuthResponse.self, from: data)
+            print("[AUTH DEBUG] user: \(String(describing: authResponse.user))")
+            print("[AUTH DEBUG] access_token: \(String(describing: authResponse.accessToken))")
+            self.accessToken = authResponse.accessToken
+            self.userId = authResponse.user?.id
             if self.userId == nil {
                 print("[AUTH ERROR] No user ID returned after signIn. Not proceeding.")
                 return
@@ -174,7 +178,7 @@ final class SupabaseManager {
                 return
             }
         } catch {
-            print("[AUTH ERROR] signIn error: \(error.localizedDescription)")
+            print("[AUTH ERROR] signIn error: \(error)")
             throw error
         }
     }
