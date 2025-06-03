@@ -81,7 +81,7 @@ struct InsightsView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
                 HStack {
-                    Text("Insights")
+                    Text("insights")
                         .font(Theme.headerStyle)
                         .foregroundColor(Theme.textPrimary)
                     
@@ -148,10 +148,9 @@ struct InsightsView: View {
                 
                 // Recent entries
                 VStack(alignment: .leading, spacing: 16) {
-                    Text("Recent Entries")
+                    Text("entries")
                         .font(Theme.bodyStyle)
                         .foregroundColor(Theme.textSecondary)
-                    
                     if viewModel.entries.isEmpty {
                         VStack(spacing: 12) {
                             Image(systemName: "square.and.pencil")
@@ -165,13 +164,10 @@ struct InsightsView: View {
                         .padding(.vertical, 40)
                     } else {
                         ForEach(viewModel.entries.prefix(5)) { entry in
-                            RecentEntryRow(entry: entry)
+                            EntryBox(entry: entry)
                         }
                     }
                 }
-                .padding(Theme.cardPadding)
-                .background(Theme.cardBackground)
-                .cornerRadius(Theme.cornerRadius)
                 .padding(.horizontal, Theme.screenPadding)
             }
             .padding(.vertical, Theme.screenPadding)
@@ -246,32 +242,64 @@ struct StatCard: View {
     }
 }
 
-struct RecentEntryRow: View {
+struct EntryBox: View {
     let entry: JournalEntry
-    
+    @State private var showDetail = false
     private let dateFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
         return formatter
     }()
-    
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
+            Text(dateFormatter.string(from: entry.date))
+                .font(Theme.captionStyle)
+                .foregroundColor(Theme.textSecondary)
             Text(entry.title)
                 .font(Theme.bodyStyle)
                 .foregroundColor(Theme.textPrimary)
-            
             Text(entry.content)
                 .font(Theme.captionStyle)
                 .foregroundColor(Theme.textSecondary)
                 .lineLimit(2)
-            
-            Text(dateFormatter.string(from: entry.date))
-                .font(Theme.captionStyle)
-                .foregroundColor(Theme.textSecondary)
         }
-        .padding(.vertical, 8)
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(Theme.cardPadding)
+        .background(Theme.cardBackground)
+        .cornerRadius(Theme.cornerRadius)
+        .onTapGesture { showDetail = true }
+        .sheet(isPresented: $showDetail) {
+            EntryDetailSheet(entry: entry)
+        }
+    }
+}
+
+struct EntryDetailSheet: View {
+    let entry: JournalEntry
+    private let dateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        return formatter
+    }()
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                Text(dateFormatter.string(from: entry.date))
+                    .font(Theme.captionStyle)
+                    .foregroundColor(Theme.textSecondary)
+                Text(entry.title)
+                    .font(Theme.headerStyle)
+                    .foregroundColor(Theme.textPrimary)
+                if let prompt = entry.prompt {
+                    Text(prompt.shortTitle)
+                        .font(Theme.captionStyle)
+                        .foregroundColor(Theme.textSecondary)
+                }
+                Text(entry.content)
+                    .font(Theme.bodyStyle)
+                    .foregroundColor(Theme.textPrimary)
+            }
+            .padding()
+        }
     }
 }
 

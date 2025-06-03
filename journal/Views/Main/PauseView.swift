@@ -1,151 +1,121 @@
 import SwiftUI
 
 struct PauseView: View {
-    @State private var selectedMode: TimerMode = .meditation
-    @State private var timeRemaining: TimeInterval = 0
-    @State private var isTimerRunning = false
-    @State private var timer: Timer?
-    
-    enum TimerMode {
-        case meditation, pomodoro
-        
-        var title: String {
-            switch self {
-            case .meditation: return "meditation"
-            case .pomodoro: return "pomodoro"
-            }
-        }
-        
-        var defaultDuration: TimeInterval {
-            switch self {
-            case .meditation: return 600 // 10 minutes
-            case .pomodoro: return 1500 // 25 minutes
-            }
-        }
-    }
-    
+    let quotes: [Quote] = [
+        Quote(text: "He who fears death will never do anything worth of a man who is alive.", author: "Seneca"),
+        Quote(text: "The happiness of your life depends upon the quality of your thoughts.", author: "Marcus Aurelius"),
+        Quote(text: "We suffer more often in imagination than in reality.", author: "Seneca"),
+        Quote(text: "It is not that we have a short time to live, but that we waste a lot of it.", author: "Seneca"),
+        Quote(text: "You have power over your mind – not outside events. Realize this, and you will find strength.", author: "Marcus Aurelius"),
+        Quote(text: "Man conquers the world by conquering himself.", author: "Zeno of Citium")
+    ]
+    @State private var currentIndex: Int = 0
+    @GestureState private var dragOffset: CGFloat = 0
+    @State private var showJournalEntry = false
+    @State private var selectedPrompt: ReflectionPrompt? = nil
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            Text("pause")
-                .font(Theme.headerStyle)
-                .foregroundColor(Theme.textPrimary)
-                .padding(.horizontal, Theme.screenPadding)
-            
-            // Mode selector
-            HStack(spacing: 16) {
-                ForEach([TimerMode.meditation, .pomodoro], id: \.self) { mode in
-                    Button(action: { selectMode(mode) }) {
-                        Text(mode.title)
-                            .font(Theme.bodyStyle)
-                            .foregroundColor(selectedMode == mode ? Theme.textPrimary : Theme.textSecondary)
-                            .padding(.vertical, 12)
-                            .padding(.horizontal, 24)
-                            .background(selectedMode == mode ? Theme.cardBackground : Color.clear)
-                            .cornerRadius(Theme.cornerRadius)
+        GeometryReader { geometry in
+            ZStack {
+                ForEach(quotes.indices, id: \.self) { i in
+                    if abs(i - currentIndex) <= 1 {
+                        QuoteCard(
+                            quote: quotes[i],
+                            onPrompt: {
+                                print("[DEBUG] Reflect button tapped for quote: \(quotes[i].text)")
+                                selectedPrompt = ReflectionPrompt(shortTitle: quotes[i].text, fullPrompt: quotes[i].text)
+                                print("[DEBUG] selectedPrompt set: \(selectedPrompt?.shortTitle ?? "nil")")
+                                showJournalEntry = true
+                                print("[DEBUG] showJournalEntry set to true")
+                            }
+                        )
+                        .frame(width: geometry.size.width, height: geometry.size.height)
+                        .offset(y: CGFloat(i - currentIndex) * geometry.size.height + dragOffset)
+                        .animation(.spring(response: 0.4, dampingFraction: 0.85), value: currentIndex)
+                    } else {
+                        EmptyView()
                     }
                 }
             }
-            .padding(.horizontal, Theme.screenPadding)
-            
-            // Timer display
-            VStack(spacing: 40) {
-                Text(timeString(from: timeRemaining))
-                    .font(.system(size: 64, weight: .light))
-                    .foregroundColor(Theme.textPrimary)
-                    .monospacedDigit()
-                
-                // Control buttons
-                HStack(spacing: 40) {
-                    Button(action: resetTimer) {
-                        Image(systemName: "arrow.counterclockwise")
-                            .font(.title)
-                            .foregroundColor(Theme.textSecondary)
+            .background(Theme.backgroundColor)
+            .gesture(
+                DragGesture()
+                    .updating($dragOffset) { value, state, _ in
+                        state = value.translation.height
                     }
-                    
-                    Button(action: toggleTimer) {
-                        Image(systemName: isTimerRunning ? "pause.fill" : "play.fill")
-                            .font(.title)
-                            .foregroundColor(Theme.textPrimary)
-                            .frame(width: 64, height: 64)
-                            .background(Theme.cardBackground)
-                            .clipShape(Circle())
-                    }
-                }
-            }
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 60)
-            
-            // Quick duration buttons
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 12) {
-                    ForEach([5, 10, 15, 20, 25, 30], id: \.self) { minutes in
-                        Button(action: { setDuration(minutes: minutes) }) {
-                            Text("\(minutes)m")
-                                .font(Theme.bodyStyle)
-                                .foregroundColor(Theme.textSecondary)
-                                .padding(.vertical, 8)
-                                .padding(.horizontal, 16)
-                                .background(Theme.cardBackground)
-                                .cornerRadius(Theme.cornerRadius)
+                    .onEnded { value in
+                        let threshold = geometry.size.height / 4
+                        if value.translation.height < -threshold && currentIndex < quotes.count - 1 {
+                            currentIndex += 1
+                        } else if value.translation.height > threshold && currentIndex > 0 {
+                            currentIndex -= 1
                         }
                     }
+            )
+            .sheet(isPresented: $showJournalEntry, onDismiss: {
+                print("[DEBUG] JournalEntryView sheet dismissed")
+            }) {
+                if let prompt = selectedPrompt {
+                    JournalEntryView(prompt: prompt)
+                        .environmentObject(JournalViewModel())
+                        .environmentObject(MainTabViewModel())
+                        .onAppear {
+                            print("[DEBUG] Presenting JournalEntryView with prompt: \(prompt.shortTitle)")
+                        }
+                } else {
+                    EmptyView()
+                        .onAppear {
+                            print("[DEBUG] selectedPrompt is nil when presenting sheet")
+                        }
                 }
-                .padding(.horizontal, Theme.screenPadding)
             }
-            
+        }
+        .edgesIgnoringSafeArea(.all)
+    }
+}
+
+struct Quote: Identifiable {
+    let id = UUID()
+    let text: String
+    let author: String
+}
+
+struct QuoteCard: View {
+    let quote: Quote
+    var onPrompt: (() -> Void)? = nil
+    var body: some View {
+        VStack(spacing: 32) {
+            Spacer()
+            Text("\u{201C}\(quote.text)\u{201D}")
+                .font(.system(size: 28, weight: .semibold, design: .serif))
+                .foregroundColor(.white)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 32)
+            Text("– \(quote.author)")
+                .font(.title3)
+                .foregroundColor(.white.opacity(0.7))
+            Button(action: {
+                print("[DEBUG] QuoteCard Reflect button pressed")
+                onPrompt?()
+            }) {
+                HStack(spacing: 4) {
+                    Image(systemName: "square.and.pencil")
+                        .font(.subheadline)
+                    Text("Reflect")
+                        .font(.subheadline)
+                }
+                .foregroundColor(.white)
+                .padding(.vertical, 4)
+                .padding(.horizontal, 12)
+                .background(Color.white.opacity(0.12))
+                .cornerRadius(16)
+                .shadow(radius: 2)
+            }
+            .padding(.top, 4)
             Spacer()
         }
-        .padding(.top, Theme.screenPadding)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Theme.backgroundColor)
-        .onAppear {
-            resetTimer()
-        }
-        .onDisappear {
-            timer?.invalidate()
-        }
-    }
-    
-    private func selectMode(_ mode: TimerMode) {
-        selectedMode = mode
-        resetTimer()
-    }
-    
-    private func toggleTimer() {
-        if isTimerRunning {
-            timer?.invalidate()
-            timer = nil
-        } else {
-            timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in
-                if timeRemaining > 0 {
-                    timeRemaining -= 1
-                } else {
-                    timer?.invalidate()
-                    timer = nil
-                    isTimerRunning = false
-                }
-            }
-        }
-        isTimerRunning.toggle()
-    }
-    
-    private func resetTimer() {
-        timer?.invalidate()
-        timer = nil
-        isTimerRunning = false
-        timeRemaining = selectedMode.defaultDuration
-    }
-    
-    private func setDuration(minutes: Int) {
-        timeRemaining = TimeInterval(minutes * 60)
-        isTimerRunning = false
-        timer?.invalidate()
-        timer = nil
-    }
-    
-    private func timeString(from timeInterval: TimeInterval) -> String {
-        let minutes = Int(timeInterval) / 60
-        let seconds = Int(timeInterval) % 60
-        return String(format: "%02d:%02d", minutes, seconds)
     }
 }
 

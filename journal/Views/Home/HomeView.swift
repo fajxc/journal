@@ -6,9 +6,19 @@ struct HomeView: View {
     @State private var showingNewEntry = false
     @State private var selectedDate = Date()
     @State private var reframeText = ""
+    @State private var sleepQuality: Double = 0.5
+    @State private var mood: Double = 0.5
+    @State private var sleepQualitySet = false
+    @State private var moodSet = false
+    @State private var moodByDate: [String: Double] = [:] // date string -> mood
     
     private let weekdays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
     private let today = Date()
+    private let dateFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "yyyy-MM-dd"
+        return f
+    }()
     
     private var currentWeekDates: [Date] {
         let calendar = Calendar.current
@@ -39,9 +49,18 @@ struct HomeView: View {
                 
                 // Weekday Scroll
                 ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 12) {
+                    HStack(spacing: 8) {
                         ForEach(Array(zip(weekdays, currentWeekDates)), id: \.1) { (day, date) in
                             let isToday = Calendar.current.isDate(date, inSameDayAs: selectedDate)
+                            let dateKey = dateFormatter.string(from: date)
+                            let moodValue = moodByDate[dateKey]
+                            let bubbleColor: Color = {
+                                if let moodValue = moodValue {
+                                    if moodValue > 0.6 { return .green.opacity(0.4) }
+                                    if moodValue < 0.4 { return .red.opacity(0.4) }
+                                }
+                                return isToday ? Color(hex: "2C2C2E") : Theme.cardBackground
+                            }()
                             VStack(spacing: 4) {
                                 Text(day)
                                     .font(.system(size: 15, weight: .semibold))
@@ -51,7 +70,7 @@ struct HomeView: View {
                                     .foregroundColor(.white.opacity(0.8))
                             }
                             .frame(width: isToday ? 54 : 44, height: isToday ? 54 : 44)
-                            .background(isToday ? Color(hex: "2C2C2E") : Theme.cardBackground)
+                            .background(bubbleColor)
                             .clipShape(Capsule())
                             .overlay(
                                 Capsule()
@@ -99,26 +118,61 @@ struct HomeView: View {
                         .foregroundColor(.white)
                         .padding(.bottom, 2)
                     HStack(spacing: 16) {
-                        TodayBox(title: "Seneca", subtitle: "Ask me anything", imageName: "person.crop.circle")
+                        TodayBox(title: "Seneca", subtitle: "Ask me anything", imageName: "person.crop.circle", action: { tabViewModel.selectedTab = .journal })
                         TodayBox(title: "Marcus Aurelius", subtitle: "Quote of the day", imageName: "person.crop.circle.fill")
                     }
                 }
                 .padding(.horizontal, Theme.screenPadding)
                 
-                // Mood & Streak Progress
+                // Sleep Quality & Mood Sliders
                 VStack(alignment: .leading, spacing: 20) {
-                    ProgressSection(
-                        title: "Daily Mood",
-                        leftLabel: "Mood",
-                        rightLabel: "75%",
-                        progress: 0.75
-                    )
-                    ProgressSection(
-                        title: "Streak",
-                        leftLabel: "Writing",
-                        rightLabel: "50%",
-                        progress: 0.5
-                    )
+                    Text("today's stats")
+                        .font(.system(size: 17, weight: .semibold))
+                        .foregroundColor(.white)
+                    HStack {
+                        Text("Sleep")
+                            .font(.system(size: 15, weight: .regular))
+                            .foregroundColor(.white.opacity(0.8))
+                        Spacer()
+                        Text("\(Int(sleepQuality * 100))%")
+                            .font(.system(size: 15, weight: .regular))
+                            .foregroundColor(.white)
+                    }
+                    Slider(value: $sleepQuality, in: 0...1, step: 0.01, onEditingChanged: { editing in
+                        if !editing { sleepQualitySet = true }
+                    })
+                    .disabled(sleepQualitySet)
+                    .accentColor(.white)
+                    .opacity(sleepQualitySet ? 0.5 : 1.0)
+                    .frame(height: 8)
+                    .background(Theme.cardBackground)
+                    .cornerRadius(4)
+
+                    Text("Mood")
+                        .font(.system(size: 17, weight: .semibold))
+                        .foregroundColor(.white)
+                    HStack {
+                        Text("Mood")
+                            .font(.system(size: 15, weight: .regular))
+                            .foregroundColor(.white.opacity(0.8))
+                        Spacer()
+                        Text("\(Int(mood * 100))%")
+                            .font(.system(size: 15, weight: .regular))
+                            .foregroundColor(.white)
+                    }
+                    Slider(value: $mood, in: 0...1, step: 0.01, onEditingChanged: { editing in
+                        if !editing {
+                            moodSet = true
+                            let dateKey = dateFormatter.string(from: selectedDate)
+                            moodByDate[dateKey] = mood
+                        }
+                    })
+                    .disabled(moodSet)
+                    .accentColor(.white)
+                    .opacity(moodSet ? 0.5 : 1.0)
+                    .frame(height: 8)
+                    .background(Theme.cardBackground)
+                    .cornerRadius(4)
                 }
                 .padding(.horizontal, Theme.screenPadding)
                 
@@ -165,8 +219,9 @@ struct TodayBox: View {
     let subtitle: String
     let imageName: String
     let fixedHeight: CGFloat = 92 // matches the taller box in the screenshot
+    var action: (() -> Void)? = nil
     var body: some View {
-        Button(action: { /* navigate to quote/chat */ }) {
+        Button(action: { action?() }) {
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(title)

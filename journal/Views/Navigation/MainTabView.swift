@@ -16,11 +16,9 @@ struct MainTabView: View {
                     }
                     .tag(MainTabViewModel.Tab.home)
                 
-                JournalView()
-                    .environmentObject(journalViewModel)
-                    .environmentObject(viewModel)
+                ChatView()
                     .tabItem {
-                        Label("journal", systemImage: "book.fill")
+                        Label("chat", systemImage: "bubble.left.and.bubble.right.fill")
                     }
                     .tag(MainTabViewModel.Tab.journal)
                 
