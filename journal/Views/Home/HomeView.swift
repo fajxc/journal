@@ -38,11 +38,6 @@ struct HomeView: View {
                         .fontWeight(.semibold)
                         .foregroundColor(.white)
                     Spacer()
-                    Button(action: { /* settings action */ }) {
-                        Image(systemName: "gearshape.fill")
-                            .foregroundColor(.white)
-                            .font(.system(size: 24, weight: .semibold))
-                    }
                 }
                 .padding(.horizontal, Theme.screenPadding)
                 .padding(.top, 8)
@@ -122,7 +117,7 @@ struct HomeView: View {
                         .padding(.bottom, 2)
                     HStack(spacing: 16) {
                         TodayBox(title: "Seneca", subtitle: "Ask me anything", imageName: "person.crop.circle", action: { tabViewModel.selectedTab = .journal })
-                        TodayBox(title: "Marcus Aurelius", subtitle: "Quote of the day", imageName: "person.crop.circle.fill")
+                        TodayBox(title: "Marcus Aurelius", subtitle: "Quote of the day", imageName: "person.crop.circle.fill", action: { tabViewModel.selectedTab = .pause })
                     }
                 }
                 .padding(.horizontal, Theme.screenPadding)
