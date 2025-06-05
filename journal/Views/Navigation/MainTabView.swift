@@ -16,22 +16,22 @@ struct MainTabView: View {
                     }
                     .tag(MainTabViewModel.Tab.home)
                 
-                ChatView()
+                PauseView()
+                    .environmentObject(viewModel)
                     .tabItem {
-                        Label("chat", systemImage: "bubble.left.and.bubble.right.fill")
+                        Label("For You", systemImage: "sparkles")
                     }
-                    .tag(MainTabViewModel.Tab.journal)
+                    .tag(MainTabViewModel.Tab.pause)
                 
                 Color.clear
                     .tabItem { Label("create", systemImage: "plus") }
                     .tag(MainTabViewModel.Tab.create)
                 
-                PauseView()
-                    .environmentObject(viewModel)
+                ChatView()
                     .tabItem {
-                        Label("pause", systemImage: "leaf.fill")
+                        Label("chat", systemImage: "bubble.left.and.bubble.right.fill")
                     }
-                    .tag(MainTabViewModel.Tab.pause)
+                    .tag(MainTabViewModel.Tab.journal)
                 
                 InsightsView()
                     .environmentObject(journalViewModel)

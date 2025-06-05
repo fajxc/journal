@@ -57,7 +57,7 @@ struct PauseView: View {
                             )
                             .frame(width: geometry.size.width, height: geometry.size.height)
                             .offset(y: CGFloat(i - currentIndex) * geometry.size.height + dragOffset)
-                            .animation(.spring(response: 0.4, dampingFraction: 0.85), value: currentIndex)
+                            .animation(.spring(response: 0.2, dampingFraction: 0.6), value: currentIndex)
                         } else {
                             EmptyView()
                         }
@@ -71,7 +71,7 @@ struct PauseView: View {
                         state = value.translation.height
                     }
                     .onEnded { value in
-                        let threshold = geometry.size.height / 4
+                        let threshold = geometry.size.height / 8
                         if value.translation.height < -threshold && currentIndex < quotes.count - 1 {
                             currentIndex += 1
                         } else if value.translation.height > threshold && currentIndex > 0 {

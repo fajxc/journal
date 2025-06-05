@@ -49,7 +49,7 @@ struct HomeView: View {
                 
                 // Weekday Scroll
                 ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 8) {
+                    HStack(spacing: 12) {
                         ForEach(Array(zip(weekdays, currentWeekDates)), id: \.1) { (day, date) in
                             let isToday = Calendar.current.isDate(date, inSameDayAs: selectedDate)
                             let dateKey = dateFormatter.string(from: date)
@@ -69,11 +69,13 @@ struct HomeView: View {
                                     .font(.system(size: 13, weight: .regular))
                                     .foregroundColor(.white.opacity(0.8))
                             }
-                            .frame(width: isToday ? 54 : 44, height: isToday ? 54 : 44)
-                            .background(bubbleColor)
-                            .clipShape(Capsule())
+                            .frame(width: isToday ? 58 : 48, height: isToday ? 54 : 46)
+                            .background(
+                                RoundedRectangle(cornerRadius: 18)
+                                    .fill(bubbleColor)
+                            )
                             .overlay(
-                                Capsule()
+                                RoundedRectangle(cornerRadius: 18)
                                     .stroke(isToday ? Color.white.opacity(0.7) : Color.clear, lineWidth: isToday ? 2 : 0)
                             )
                             .shadow(color: isToday ? Color.white.opacity(0.08) : .clear, radius: 4, x: 0, y: 2)
@@ -82,6 +84,7 @@ struct HomeView: View {
                     }
                     .padding(.horizontal, Theme.screenPadding)
                 }
+                .padding(.vertical, 8)
                 
                 // Reframe Input + Button
                 HStack(spacing: 12) {
