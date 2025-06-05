@@ -1,14 +1,21 @@
 import SwiftUI
 
+struct APIQuote: Decodable, Identifiable {
+    let id: String
+    let quote: String
+    let year: String?
+    let work: String?
+    let philosopher: Philosopher?
+    
+    struct Philosopher: Decodable {
+        let id: String
+    }
+}
+
 struct PauseView: View {
-    let quotes: [Quote] = [
-        Quote(text: "He who fears death will never do anything worth of a man who is alive.", author: "Seneca"),
-        Quote(text: "The happiness of your life depends upon the quality of your thoughts.", author: "Marcus Aurelius"),
-        Quote(text: "We suffer more often in imagination than in reality.", author: "Seneca"),
-        Quote(text: "It is not that we have a short time to live, but that we waste a lot of it.", author: "Seneca"),
-        Quote(text: "You have power over your mind – not outside events. Realize this, and you will find strength.", author: "Marcus Aurelius"),
-        Quote(text: "Man conquers the world by conquering himself.", author: "Zeno of Citium")
-    ]
+    @State private var quotes: [Quote] = []
+    @State private var isLoading = true
+    @State private var errorMessage: String? = nil
     @State private var currentIndex: Int = 0
     @GestureState private var dragOffset: CGFloat = 0
     @State private var showJournalEntry = false
@@ -17,23 +24,43 @@ struct PauseView: View {
     var body: some View {
         GeometryReader { geometry in
             ZStack {
-                ForEach(quotes.indices, id: \.self) { i in
-                    if abs(i - currentIndex) <= 1 {
-                        QuoteCard(
-                            quote: quotes[i],
-                            onPrompt: {
-                                print("[DEBUG] Reflect button tapped for quote: \(quotes[i].text)")
-                                selectedPrompt = ReflectionPrompt(shortTitle: quotes[i].text, fullPrompt: quotes[i].text)
-                                print("[DEBUG] selectedPrompt set: \(selectedPrompt?.shortTitle ?? "nil")")
-                                showJournalEntry = true
-                                print("[DEBUG] showJournalEntry set to true")
-                            }
-                        )
-                        .frame(width: geometry.size.width, height: geometry.size.height)
-                        .offset(y: CGFloat(i - currentIndex) * geometry.size.height + dragOffset)
-                        .animation(.spring(response: 0.4, dampingFraction: 0.85), value: currentIndex)
-                    } else {
-                        EmptyView()
+                if isLoading {
+                    ProgressView("Loading quotes...")
+                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                } else if let errorMessage = errorMessage {
+                    VStack {
+                        Text("Failed to load quotes")
+                            .foregroundColor(.white)
+                        Text(errorMessage)
+                            .foregroundColor(.red)
+                            .font(.caption)
+                        Button("Retry") {
+                            Task { await fetchQuotes() }
+                        }
+                        .padding(.top, 8)
+                    }
+                } else if quotes.isEmpty {
+                    Text("No quotes available.")
+                        .foregroundColor(.white)
+                } else {
+                    ForEach(quotes.indices, id: \.self) { i in
+                        if abs(i - currentIndex) <= 1 {
+                            QuoteCard(
+                                quote: quotes[i],
+                                onPrompt: {
+                                    print("[DEBUG] Reflect button tapped for quote: \(quotes[i].text)")
+                                    selectedPrompt = ReflectionPrompt(shortTitle: quotes[i].text, fullPrompt: quotes[i].text)
+                                    print("[DEBUG] selectedPrompt set: \(selectedPrompt?.shortTitle ?? "nil")")
+                                    showJournalEntry = true
+                                    print("[DEBUG] showJournalEntry set to true")
+                                }
+                            )
+                            .frame(width: geometry.size.width, height: geometry.size.height)
+                            .offset(y: CGFloat(i - currentIndex) * geometry.size.height + dragOffset)
+                            .animation(.spring(response: 0.4, dampingFraction: 0.85), value: currentIndex)
+                        } else {
+                            EmptyView()
+                        }
                     }
                 }
             }
@@ -69,8 +96,51 @@ struct PauseView: View {
                         }
                 }
             }
+            .task {
+                await fetchQuotes()
+            }
         }
         .edgesIgnoringSafeArea(.all)
+    }
+
+    private func fetchQuotes() async {
+        isLoading = true
+        errorMessage = nil
+        do {
+            guard let url = URL(string: "https://philosophersapi.com/api/quotes") else {
+                errorMessage = "Invalid URL"
+                isLoading = false
+                return
+            }
+            let (data, response) = try await URLSession.shared.data(from: url)
+            guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
+                errorMessage = "Server error"
+                isLoading = false
+                return
+            }
+            let apiQuotes = try JSONDecoder().decode([APIQuote].self, from: data)
+            let mappedQuotes = apiQuotes.map { apiQuote in
+                Quote(text: apiQuote.quote, author: authorName(from: apiQuote))
+            }
+            quotes = mappedQuotes
+            isLoading = false
+        } catch {
+            errorMessage = error.localizedDescription
+            isLoading = false
+        }
+    }
+
+    private func authorName(from apiQuote: APIQuote) -> String {
+        // Simple mapping for demonstration purposes
+        let philosopherNames: [String: String] = [
+            "F8320389-19D4-4095-95A3-A93A7F7F7997": "Heraclitus",
+            "73E6F183-7335-458F-883E-83A9A8F9E562": "Parmenides",
+            "0506F72D-FCD9-4F55-BD23-38953ADD2F88": "David Hume",
+            "8D0D5B08-94A1-401D-AF81-25377AEE86DA": "Immanuel Kant",
+            "1180AEE2-37F0-4A03-A2F0-F8F63DD7A5E2": "Georg Wilhelm Friedrich Hegel",
+            "BB4F146D-92C5-4E69-B6B4-F1F946C84377": "Jean-Jacques Rousseau"
+        ]
+        return philosopherNames[apiQuote.philosopher?.id ?? ""] ?? "Unknown"
     }
 }
 
