@@ -3,19 +3,28 @@ import SwiftUI
 struct OnboardingView: View {
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
     @State private var currentStep = 0
+    @State private var selectedMindsets: Set<String> = []
+    @State private var selectedAge: String? = nil
+    @State private var journalingTimes: [String: Bool] = [
+        "Morning": true,
+        "During the Day": true,
+        "Evening": true
+    ]
     @State private var selectedIdeologies: Set<String> = []
     @State private var lifeCheckText = ""
     @State private var selectedPerspective: String? = nil
     
     private var canContinue: Bool {
         switch currentStep {
-        case 0: // Welcome step
+        case 0: // Welcome
             return true
-        case 1: // Life check step
-            return !lifeCheckText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-        case 2: // Perspective step
-            return selectedPerspective != nil
-        case 3: // Philosophy word cloud
+        case 1: // Mindset
+            return !selectedMindsets.isEmpty
+        case 2: // Age
+            return selectedAge != nil
+        case 3: // Journaling time
+            return journalingTimes.values.contains(true)
+        case 4: // Traits
             return selectedIdeologies.count >= 3 && selectedIdeologies.count <= 5
         default:
             return false
@@ -23,146 +32,215 @@ struct OnboardingView: View {
     }
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 30) {
+        VStack(spacing: 0) {
             // Progress and back button
             HStack {
                 if currentStep > 0 {
                     Button(action: { currentStep -= 1 }) {
                         Image(systemName: "chevron.left")
-                            .foregroundColor(Theme.textPrimary)
+                            .foregroundColor(.white)
                             .imageScale(.large)
                     }
-                    .padding(.leading, Theme.screenPadding)
+                    .padding(.leading, 24)
                 }
-                
                 Spacer()
-                
-                // Progress indicator
+                // Progress dots
                 HStack(spacing: 8) {
-                    ForEach(0..<4) { index in
-                        RoundedRectangle(cornerRadius: Theme.cornerRadius / 2)
-                            .fill(currentStep >= index ? Theme.accentColor : Theme.cardBackground)
-                            .frame(height: 4)
+                    ForEach(0..<5) { index in
+                        Circle()
+                            .fill(currentStep == index ? Color.white : Color.gray.opacity(0.4))
+                            .frame(width: 8, height: 8)
                     }
                 }
-                .frame(width: 120)
-                
                 Spacer()
             }
-            .padding(.horizontal, Theme.screenPadding)
-            .padding(.top, Theme.screenPadding)
-            
+            .padding(.horizontal, 24)
+            .padding(.top, 32)
+            Spacer(minLength: 24)
             // Content
-            ScrollView {
-                VStack(alignment: .leading, spacing: 30) {
-                    switch currentStep {
-                    case 0:
-                        welcomeStep
-                    case 1:
-                        lifeCheckStep
-                    case 2:
-                        perspectiveStep
-                    case 3:
-                        PhilosophyWordCloud(selectedTraits: $selectedIdeologies)
-                            .overlay(
-                                VStack {
-                                    Spacer()
-                                    if !canContinue {
-                                        Text("Select 3-5 words")
-                                            .font(Theme.captionStyle)
-                                            .foregroundColor(Theme.textSecondary)
-                                            .padding(.vertical, 8)
-                                    }
-                                }
-                            )
-                    default:
-                        EmptyView()
-                    }
+            Group {
+                switch currentStep {
+                case 0:
+                    welcomeStep
+                case 1:
+                    mindsetStep
+                case 2:
+                    ageStep
+                case 3:
+                    journalingTimeStep
+                case 4:
+                    PhilosophyWordCloud(selectedTraits: $selectedIdeologies)
+                        .padding(.top, 16)
+                default:
+                    EmptyView()
                 }
-                .padding(.horizontal, Theme.screenPadding)
             }
-            
+            .padding(.horizontal, 24)
             Spacer()
-            
-            // Navigation button
+            // Continue button
             Button(action: {
-                if currentStep < 3 {
+                if currentStep < 4 {
                     currentStep += 1
                 } else {
                     hasCompletedOnboarding = true
                 }
             }) {
-                Text(currentStep < 3 ? "Continue" : "Get Started")
-                    .font(Theme.bodyStyle)
-                    .foregroundColor(Theme.textPrimary)
+                Text(currentStep < 4 ? "Continue" : "Get Started")
+                    .font(.system(size: 20, weight: .bold))
+                    .foregroundColor(.black)
                     .frame(maxWidth: .infinity)
                     .padding()
-                    .background(canContinue ? Theme.accentColor : Theme.cardBackground)
-                    .cornerRadius(Theme.cornerRadius)
+                    .background(canContinue ? Color.white : Color.gray.opacity(0.3))
+                    .cornerRadius(16)
             }
             .disabled(!canContinue)
-            .padding(.horizontal, Theme.screenPadding)
-            .padding(.bottom, Theme.screenPadding)
+            .padding(.horizontal, 24)
+            .padding(.bottom, 32)
         }
-        .background(Theme.backgroundColor)
+        .background(Color.black.ignoresSafeArea())
         .preferredColorScheme(.dark)
     }
     
+    // Slide 1: Welcome
     private var welcomeStep: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            Text("welcome")
-                .font(Theme.headerStyle)
-                .foregroundColor(Theme.textPrimary)
-            
-            Text("a space for reflection, growth, and philosophical insight")
-                .font(Theme.bodyStyle)
-                .foregroundColor(Theme.textSecondary)
-                .fixedSize(horizontal: false, vertical: true)
+        VStack(spacing: 40) {
+            Spacer()
+            VStack(spacing: 16) {
+                Text("meet stoic.")
+                    .font(.system(size: 36, weight: .bold))
+                    .foregroundColor(.white)
+                    .multilineTextAlignment(.center)
+                Text("your mental health companion")
+                    .font(.system(size: 22))
+                    .foregroundColor(Color.white.opacity(0.7))
+                    .multilineTextAlignment(.center)
+            }
+            // Placeholder mascot
+            Spacer()
+            Image(systemName: "bird.fill")
+                .resizable()
+                .scaledToFit()
+                .frame(height: 180)
+                .foregroundColor(.white)
+                .padding(.bottom, 40)
         }
     }
     
-    private var lifeCheckStep: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            Text("how are you feeling about your life right now?")
-                .font(Theme.headerStyle)
-                .foregroundColor(Theme.textPrimary)
-                .fixedSize(horizontal: false, vertical: true)
-            
-            TextEditor(text: $lifeCheckText)
-                .font(Theme.bodyStyle)
-                .foregroundColor(Theme.textPrimary)
-                .scrollContentBackground(.hidden)
-                .frame(height: 120)
-                .padding()
-                .background(Theme.cardBackground.opacity(0.4))
-                .cornerRadius(Theme.cornerRadius)
-                .overlay(
-                    RoundedRectangle(cornerRadius: Theme.cornerRadius)
-                        .stroke(Theme.cardBackground, lineWidth: 1)
-                )
-        }
-    }
-    
-    private var perspectiveStep: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            Text("do you feel like you lack a different perspective in life?")
-                .font(Theme.headerStyle)
-                .foregroundColor(Theme.textPrimary)
-                .fixedSize(horizontal: false, vertical: true)
-            
-            VStack(spacing: 12) {
-                ForEach(["yes", "sometimes", "no"], id: \.self) { option in
-                    Button(action: { selectedPerspective = option }) {
-                        Text(option)
-                            .font(Theme.bodyStyle)
-                            .foregroundColor(Theme.textPrimary)
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(selectedPerspective == option ? Theme.accentColor : Theme.cardBackground)
-                            .cornerRadius(Theme.cornerRadius)
+    // Slide 2: What's on your mind?
+    private var mindsetStep: some View {
+        VStack(spacing: 32) {
+            Spacer(minLength: 16)
+            Text("What's on your mind?")
+                .font(.system(size: 28, weight: .bold))
+                .foregroundColor(.white)
+                .multilineTextAlignment(.center)
+            Text("Your answers will help shape the app around your needs.")
+                .font(.system(size: 18))
+                .foregroundColor(Color.white.opacity(0.7))
+                .multilineTextAlignment(.center)
+            VStack(spacing: 16) {
+                ForEach(["Elevate mood", "Reduce stress & anxiety", "Improve sleep", "Increase productivity", "Something else"], id: \ .self) { option in
+                    Button(action: {
+                        if selectedMindsets.contains(option) {
+                            selectedMindsets.remove(option)
+                        } else {
+                            selectedMindsets.insert(option)
+                        }
+                    }) {
+                        HStack {
+                            Text(option)
+                                .font(.system(size: 20, weight: .medium))
+                                .foregroundColor(.white)
+                            Spacer()
+                            if selectedMindsets.contains(option) {
+                                Image(systemName: "checkmark.circle.fill")
+                                    .foregroundColor(.white)
+                            }
+                        }
+                        .padding()
+                        .frame(maxWidth: .infinity)
+                        .background(Color.gray.opacity(selectedMindsets.contains(option) ? 0.4 : 0.2))
+                        .cornerRadius(16)
                     }
                 }
             }
+            Spacer()
+        }
+    }
+    
+    // Slide 3: Age selection
+    private var ageStep: some View {
+        VStack(spacing: 32) {
+            Spacer(minLength: 16)
+            Text("How old are you?")
+                .font(.system(size: 28, weight: .bold))
+                .foregroundColor(.white)
+                .multilineTextAlignment(.center)
+            Text("Your answers will help shape the app around your needs.")
+                .font(.system(size: 18))
+                .foregroundColor(Color.white.opacity(0.7))
+                .multilineTextAlignment(.center)
+            VStack(spacing: 16) {
+                ForEach(["Under 18", "18–24", "25–34", "35–44", "45–54", "55–64", "Over 64"], id: \ .self) { age in
+                    Button(action: { selectedAge = age }) {
+                        HStack {
+                            Text(age)
+                                .font(.system(size: 20, weight: .medium))
+                                .foregroundColor(.white)
+                            Spacer()
+                            if selectedAge == age {
+                                Image(systemName: "checkmark.circle.fill")
+                                    .foregroundColor(.white)
+                            }
+                        }
+                        .padding()
+                        .frame(maxWidth: .infinity)
+                        .background(Color.gray.opacity(selectedAge == age ? 0.4 : 0.2))
+                        .cornerRadius(16)
+                    }
+                }
+            }
+            Spacer()
+        }
+    }
+    
+    // Slide 4: Journaling time preference
+    private var journalingTimeStep: some View {
+        VStack(spacing: 32) {
+            Spacer(minLength: 16)
+            Text("When do you want to carve out time for journaling?")
+                .font(.system(size: 28, weight: .bold))
+                .foregroundColor(.white)
+                .multilineTextAlignment(.center)
+            Text("You're most likely to form a healthy habit with 3 daily notifications.")
+                .font(.system(size: 18))
+                .foregroundColor(Color.white.opacity(0.7))
+                .multilineTextAlignment(.center)
+            VStack(spacing: 20) {
+                ForEach([("Morning", "8:00 AM"), ("During the Day", "2:30 PM"), ("Evening", "9:00 PM")], id: \ .0) { (label, time) in
+                    HStack {
+                        VStack(alignment: .leading) {
+                            Text(label)
+                                .font(.system(size: 20, weight: .medium))
+                                .foregroundColor(.white)
+                            Text(time)
+                                .font(.system(size: 16))
+                                .foregroundColor(Color.white.opacity(0.7))
+                        }
+                        Spacer()
+                        Toggle("", isOn: Binding(
+                            get: { journalingTimes[label, default: false] },
+                            set: { journalingTimes[label] = $0 }
+                        ))
+                        .toggleStyle(SwitchToggleStyle(tint: Color.white))
+                        .labelsHidden()
+                    }
+                    .padding()
+                    .background(Color.gray.opacity(journalingTimes[label, default: false] ? 0.4 : 0.2))
+                    .cornerRadius(16)
+                }
+            }
+            Spacer()
         }
     }
 }

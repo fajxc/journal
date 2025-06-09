@@ -18,7 +18,7 @@
                BlueprintIdentifier = "9BF65B962DE97278003E5CB1"
                BuildableName = "stillmind..app"
                BlueprintName = "stillmind."
-               ReferencedContainer = "container:journal.xcodeproj">
+               ReferencedContainer = "container:stillmind.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -38,7 +38,7 @@
                BlueprintIdentifier = "9BF65BA32DE97279003E5CB1"
                BuildableName = "journalTests.xctest"
                BlueprintName = "journalTests"
-               ReferencedContainer = "container:journal.xcodeproj">
+               ReferencedContainer = "container:stillmind.xcodeproj">
             </BuildableReference>
          </TestableReference>
          <TestableReference
@@ -49,7 +49,7 @@
                BlueprintIdentifier = "9BF65BAD2DE97279003E5CB1"
                BuildableName = "journalUITests.xctest"
                BlueprintName = "journalUITests"
-               ReferencedContainer = "container:journal.xcodeproj">
+               ReferencedContainer = "container:stillmind.xcodeproj">
             </BuildableReference>
          </TestableReference>
       </Testables>
@@ -71,7 +71,7 @@
             BlueprintIdentifier = "9BF65B962DE97278003E5CB1"
             BuildableName = "stillmind..app"
             BlueprintName = "stillmind."
-            ReferencedContainer = "container:journal.xcodeproj">
+            ReferencedContainer = "container:stillmind.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
       <EnvironmentVariables>
@@ -95,7 +95,7 @@
             BlueprintIdentifier = "9BF65B962DE97278003E5CB1"
             BuildableName = "stillmind..app"
             BlueprintName = "stillmind."
-            ReferencedContainer = "container:journal.xcodeproj">
+            ReferencedContainer = "container:stillmind.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>
