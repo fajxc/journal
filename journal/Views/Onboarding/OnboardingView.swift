@@ -13,6 +13,11 @@ struct OnboardingView: View {
     @State private var selectedIdeologies: Set<String> = []
     @State private var lifeCheckText = ""
     @State private var selectedPerspective: String? = nil
+    // Overlay state
+    @State private var showMatchOverlay = false
+    @State private var showPhilosopherName = false
+    private let matchedPhilosopher = "Seneca"
+    private let matchedOneLiner = "You are resilient and wise."
     
     private var canContinue: Bool {
         switch currentStep {
@@ -32,73 +37,133 @@ struct OnboardingView: View {
     }
     
     var body: some View {
-        VStack(spacing: 0) {
-            // Progress and back button
-            HStack {
-                if currentStep > 0 {
-                    Button(action: { currentStep -= 1 }) {
-                        Image(systemName: "chevron.left")
+        ZStack {
+            VStack(spacing: 0) {
+                // Progress and back button
+                HStack {
+                    if currentStep > 0 {
+                        Button(action: { currentStep -= 1 }) {
+                            Image(systemName: "chevron.left")
+                                .foregroundColor(.white)
+                                .imageScale(.large)
+                        }
+                        .padding(.leading, 24)
+                    }
+                    Spacer()
+                    // Progress dots
+                    HStack(spacing: 8) {
+                        ForEach(0..<5) { index in
+                            Circle()
+                                .fill(currentStep == index ? Color.white : Color.gray.opacity(0.4))
+                                .frame(width: 8, height: 8)
+                        }
+                    }
+                    Spacer()
+                }
+                .padding(.horizontal, 24)
+                .padding(.top, 32)
+                Spacer(minLength: 24)
+                // Content
+                Group {
+                    switch currentStep {
+                    case 0:
+                        welcomeStep
+                    case 1:
+                        mindsetStep
+                    case 2:
+                        ageStep
+                    case 3:
+                        journalingTimeStep
+                    case 4:
+                        PhilosophyWordCloud(selectedTraits: $selectedIdeologies)
+                            .padding(.top, 16)
+                    default:
+                        EmptyView()
+                    }
+                }
+                .padding(.horizontal, 24)
+                Spacer()
+                // Continue button
+                Button(action: {
+                    if currentStep < 4 {
+                        currentStep += 1
+                    } else {
+                        withAnimation(.easeInOut(duration: 0.4)) {
+                            showMatchOverlay = true
+                        }
+                        // Increase delay before showing philosopher name
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.7) {
+                            withAnimation(.easeInOut(duration: 1.0)) {
+                                showPhilosopherName = true
+                            }
+                        }
+                        // Do not complete onboarding here; wait for button
+                    }
+                }) {
+                    Text(currentStep < 4 ? "Continue" : "Next")
+                        .font(.system(size: 20, weight: .bold))
+                        .foregroundColor(.black)
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(canContinue ? Color.white : Color.gray.opacity(0.3))
+                        .cornerRadius(16)
+                }
+                .disabled(!canContinue)
+                .padding(.horizontal, 24)
+                .padding(.bottom, 32)
+            }
+            .background(Color.black.ignoresSafeArea())
+            .preferredColorScheme(.dark)
+            // Overlay: Matched Philosopher
+            if showMatchOverlay {
+                Color.black.opacity(0.96)
+                    .ignoresSafeArea()
+                    .transition(.opacity)
+                VStack {
+                    Spacer(minLength: showPhilosopherName ? 80 : 0)
+                    VStack(spacing: showPhilosopherName ? 16 : 32) {
+                        Text("You've matched with...")
+                            .font(.system(size: 28, weight: .bold))
                             .foregroundColor(.white)
-                            .imageScale(.large)
+                            .opacity(1)
+                            .transition(.move(edge: .top).combined(with: .opacity))
+                            .frame(maxWidth: .infinity, alignment: .center)
+                            .padding(.top, showPhilosopherName ? 0 : 120)
+                        if showPhilosopherName {
+                            VStack(spacing: 20) {
+                                Text(matchedPhilosopher)
+                                    .font(.system(size: 44, weight: .heavy))
+                                    .foregroundColor(.white)
+                                    .opacity(showPhilosopherName ? 1 : 0)
+                                    .animation(.easeInOut(duration: 1.0), value: showPhilosopherName)
+                                    .id("philosopherName")
+                                Text(matchedOneLiner)
+                                    .font(.system(size: 20, weight: .medium))
+                                    .foregroundColor(Color.white.opacity(0.8))
+                                    .multilineTextAlignment(.center)
+                                    .transition(.opacity)
+                                Button(action: {
+                                    hasCompletedOnboarding = true
+                                }) {
+                                    Text("Get Started")
+                                        .font(.system(size: 20, weight: .bold))
+                                        .foregroundColor(.black)
+                                        .frame(maxWidth: .infinity)
+                                        .padding()
+                                        .background(Color.white)
+                                        .cornerRadius(16)
+                                        .padding(.top, 16)
+                                        .padding(.horizontal, 40)
+                                }
+                                .transition(.opacity)
+                            }
+                        }
                     }
-                    .padding(.leading, 24)
+                    Spacer()
                 }
-                Spacer()
-                // Progress dots
-                HStack(spacing: 8) {
-                    ForEach(0..<5) { index in
-                        Circle()
-                            .fill(currentStep == index ? Color.white : Color.gray.opacity(0.4))
-                            .frame(width: 8, height: 8)
-                    }
-                }
-                Spacer()
+                .animation(.easeInOut, value: showPhilosopherName)
             }
-            .padding(.horizontal, 24)
-            .padding(.top, 32)
-            Spacer(minLength: 24)
-            // Content
-            Group {
-                switch currentStep {
-                case 0:
-                    welcomeStep
-                case 1:
-                    mindsetStep
-                case 2:
-                    ageStep
-                case 3:
-                    journalingTimeStep
-                case 4:
-                    PhilosophyWordCloud(selectedTraits: $selectedIdeologies)
-                        .padding(.top, 16)
-                default:
-                    EmptyView()
-                }
-            }
-            .padding(.horizontal, 24)
-            Spacer()
-            // Continue button
-            Button(action: {
-                if currentStep < 4 {
-                    currentStep += 1
-                } else {
-                    hasCompletedOnboarding = true
-                }
-            }) {
-                Text(currentStep < 4 ? "Continue" : "Get Started")
-                    .font(.system(size: 20, weight: .bold))
-                    .foregroundColor(.black)
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(canContinue ? Color.white : Color.gray.opacity(0.3))
-                    .cornerRadius(16)
-            }
-            .disabled(!canContinue)
-            .padding(.horizontal, 24)
-            .padding(.bottom, 32)
         }
-        .background(Color.black.ignoresSafeArea())
-        .preferredColorScheme(.dark)
     }
     
     // Slide 1: Welcome

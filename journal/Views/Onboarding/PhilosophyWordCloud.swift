@@ -34,137 +34,62 @@ struct PhilosophyWordCloud: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            // Header section
-            VStack(alignment: .leading, spacing: 24) {
-                // Title and subtitles
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("select what resonates")
-                        .font(.system(size: 34, weight: .bold))
-                        .foregroundColor(Theme.textPrimary)
-                    
-                    Text("Select 3-5 words that resonate with you")
-                        .font(.system(size: 20))
-                        .foregroundColor(Theme.textSecondary)
-                    
-                    Text("These words will help match you with a philosophical guide")
-                        .font(.system(size: 17))
-                        .foregroundColor(Theme.textSecondary)
-                        .padding(.top, 8)
-                }
-                
-                // Selection counter and clear button
-                HStack {
-                    Text("Selected: \(selectedTraits.count)/5")
-                        .foregroundColor(selectedTraits.isEmpty ? .orange : .green)
-                        .font(.system(size: 17))
-                    
-                    Spacer()
-                    
-                    if !selectedTraits.isEmpty {
-                        Button(action: { selectedTraits.removeAll() }) {
-                            Text("Clear")
-                                .font(.system(size: 17))
-                                .foregroundColor(Theme.textSecondary)
-                                .padding(.horizontal, 12)
-                                .padding(.vertical, 6)
-                                .background(Color(white: 0.3))
-                                .cornerRadius(8)
+            Spacer(minLength: 24)
+            VStack(spacing: 16) {
+                Text("Select what resonates")
+                    .font(.system(size: 28, weight: .bold))
+                    .foregroundColor(.white)
+                    .multilineTextAlignment(.center)
+                Text("Pick 3–5 traits that resonate with you")
+                    .font(.system(size: 18))
+                    .foregroundColor(Color.white.opacity(0.7))
+                    .multilineTextAlignment(.center)
+            }
+            .padding(.horizontal, 24)
+            .padding(.bottom, 8)
+            ScrollView {
+                VStack(spacing: 24) {
+                    // Trait chips
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 120), spacing: 16)], spacing: 16) {
+                        ForEach(traits) { trait in
+                            TraitChip(
+                                text: trait.word,
+                                isSelected: selectedTraits.contains(trait.word),
+                                action: { toggleTrait(trait.word) },
+                                isDisabled: !selectedTraits.contains(trait.word) && selectedTraits.count >= maxSelections
+                            )
                         }
                     }
-                }
-            }
-            .padding(.horizontal)
-            .padding(.top)
-            
-            // Traits grid with fixed height
-            LazyVGrid(columns: [
-                GridItem(.adaptive(minimum: 100), spacing: 8)
-            ], alignment: .leading, spacing: 12) {
-                ForEach(traits) { trait in
-                    TraitButton(
-                        text: trait.word,
-                        isSelected: selectedTraits.contains(trait.word),
-                        action: { toggleTrait(trait.word) }
-                    )
-                }
-            }
-            .padding()
-            
-            Spacer(minLength: 20)
-            
-            // Selected traits descriptions
-            if !selectedTraits.isEmpty {
-                VStack(alignment: .leading, spacing: 16) {
-                    Text("About your selections:")
-                        .font(.system(size: 17))
-                        .foregroundColor(Theme.textPrimary)
-                    
-                    VStack(alignment: .leading, spacing: 16) {
-                        ForEach(traits.filter { selectedTraits.contains($0.word) }) { trait in
-                            HStack(alignment: .top, spacing: 4) {
-                                Text("•")
-                                    .foregroundColor(Theme.textPrimary)
-                                
+                    .padding(.top, 8)
+                    // Selected trait descriptions
+                    if !selectedTraits.isEmpty {
+                        VStack(alignment: .leading, spacing: 16) {
+                            Text("About your selections:")
+                                .font(.system(size: 17, weight: .medium))
+                                .foregroundColor(.white)
+                            ForEach(traits.filter { selectedTraits.contains($0.word) }) { trait in
                                 VStack(alignment: .leading, spacing: 4) {
                                     Text(trait.word)
-                                        .font(.system(size: 17, weight: .medium))
-                                        .foregroundColor(Theme.textPrimary)
-                                    
+                                        .font(.system(size: 16, weight: .semibold))
+                                        .foregroundColor(.white)
                                     Text(trait.description)
                                         .font(.system(size: 15))
-                                        .foregroundColor(Theme.textSecondary)
+                                        .foregroundColor(Color.white.opacity(0.7))
                                 }
                             }
                         }
+                        .padding(20)
+                        .background(Color.white.opacity(0.07))
+                        .cornerRadius(16)
+                        .padding(.horizontal, 8)
                     }
                 }
-                .padding(16)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(Color(white: 0.15))
-                .cornerRadius(12)
-                .padding(.horizontal)
+                .padding(.horizontal, 16)
+                .padding(.bottom, 32)
             }
-            
-            Spacer(minLength: 20)
-            
-            // Progress and navigation
-            VStack(spacing: 16) {
-                // Progress dots
-                HStack(spacing: 8) {
-                    ForEach(0..<5) { index in
-                        Capsule()
-                            .fill(index == 3 ? Theme.textPrimary : Theme.textSecondary.opacity(0.3))
-                            .frame(height: 4)
-                    }
-                }
-                .padding(.horizontal)
-                
-                // Navigation buttons
-                HStack {
-                    Button(action: {}) {
-                        HStack(spacing: 4) {
-                            Image(systemName: "chevron.left")
-                            Text("Back")
-                        }
-                        .foregroundColor(Theme.textSecondary)
-                    }
-                    
-                    Spacer()
-                    
-                    Button(action: {}) {
-                        Text("Continue")
-                            .foregroundColor(Theme.textPrimary)
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 8)
-                            .background(Color(white: 0.2))
-                            .cornerRadius(8)
-                    }
-                }
-                .padding(.horizontal)
-            }
-            .padding(.vertical)
+            Spacer(minLength: 0)
         }
-        .background(Theme.backgroundColor)
+        .background(Color.black.ignoresSafeArea())
     }
     
     private func toggleTrait(_ trait: String) {
@@ -176,36 +101,34 @@ struct PhilosophyWordCloud: View {
     }
 }
 
-struct TraitButton: View {
+struct TraitChip: View {
     let text: String
     let isSelected: Bool
     let action: () -> Void
-    
+    let isDisabled: Bool
     var body: some View {
         Button(action: action) {
-            HStack(spacing: 4) {
+            HStack(spacing: 8) {
                 Text(text)
-                    .font(.system(size: 17))
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.8)
+                    .font(.system(size: 18, weight: .medium))
+                    .foregroundColor(isSelected ? .black : .white)
                 if isSelected {
                     Image(systemName: "checkmark")
-                        .font(.system(size: 12, weight: .bold))
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(.black)
                 }
             }
-            .foregroundColor(isSelected ? Theme.textPrimary : Theme.textSecondary)
-            .padding(.horizontal, 16)
-            .padding(.vertical, 8)
-            .frame(height: 36)
-            .background(
-                Capsule()
-                    .fill(isSelected ? Color(white: 0.3) : Color.clear)
-                    .overlay(
-                        Capsule()
-                            .strokeBorder(isSelected ? Color.clear : Color(white: 0.3), lineWidth: 1)
-                    )
+            .padding(.horizontal, 20)
+            .padding(.vertical, 12)
+            .background(isSelected ? Color.white : Color.white.opacity(0.13))
+            .cornerRadius(22)
+            .overlay(
+                RoundedRectangle(cornerRadius: 22)
+                    .stroke(isSelected ? Color.white : Color.white.opacity(0.2), lineWidth: 1)
             )
         }
+        .disabled(isDisabled)
+        .opacity(isDisabled ? 0.4 : 1.0)
     }
 }
 

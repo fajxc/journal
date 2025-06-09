@@ -20,61 +20,80 @@ struct ChatView: View {
     }()
     
     var body: some View {
-        VStack(spacing: 0) {
-            // Chat header
-            VStack(spacing: 4) {
-                Text(philosopher)
-                    .font(.headline)
-                Text("Stoic Philosopher")
-                    .font(.caption)
-                    .foregroundColor(.gray)
-            }
-            .frame(maxWidth: .infinity)
-            .padding()
-            .background(Color.gray.opacity(0.1))
+        ZStack {
+            Color.black.ignoresSafeArea()
             
-            // Messages
-            ScrollView {
-                LazyVStack(spacing: 12) {
-                    ForEach(messages) { message in
-                        MessageBubble(
-                            message: message,
-                            dateFormatter: dateFormatter
-                        )
-                    }
-                    
-                    if isTyping {
-                        HStack {
-                            Text("Typing")
-                                .font(.caption)
-                                .foregroundColor(.gray)
-                            TypingIndicator()
-                        }
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.horizontal)
-                    }
-                }
-                .padding()
-            }
-            
-            // Input area
             VStack(spacing: 0) {
-                Divider()
-                HStack(spacing: 12) {
-                    TextField("Ask anything...", text: $newMessage)
-                        .textFieldStyle(RoundedBorderTextFieldStyle())
-                        .frame(maxWidth: .infinity)
-                    
-                    Button(action: sendMessage) {
-                        Image(systemName: "arrow.up.circle.fill")
-                            .font(.title2)
-                            .foregroundColor(newMessage.isEmpty ? .gray : .blue)
-                    }
-                    .disabled(newMessage.isEmpty)
+                // Chat header
+                VStack(spacing: 4) {
+                    Text(philosopher)
+                        .font(.system(size: 20, weight: .bold))
+                        .foregroundColor(.white)
+                    Text("Stoic Philosopher")
+                        .font(.system(size: 15))
+                        .foregroundColor(.white.opacity(0.7))
                 }
+                .frame(maxWidth: .infinity)
                 .padding()
+                .background(Color.white.opacity(0.04))
+                
+                // Messages
+                ScrollView {
+                    LazyVStack(spacing: 12) {
+                        ForEach(messages) { message in
+                            MessageBubble(
+                                message: message,
+                                dateFormatter: dateFormatter
+                            )
+                        }
+                        
+                        if isTyping {
+                            HStack {
+                                Text("Typing")
+                                    .font(.system(size: 15))
+                                    .foregroundColor(.white.opacity(0.7))
+                                TypingIndicator()
+                            }
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.horizontal)
+                        }
+                    }
+                    .padding()
+                }
+                
+                // Input area
+                VStack(spacing: 0) {
+                    Divider()
+                        .background(Color.white.opacity(0.1))
+                    HStack(spacing: 12) {
+                        TextField("Ask anything...", text: $newMessage)
+                            .font(.system(size: 17))
+                            .foregroundColor(.white)
+                            .padding(.vertical, 12)
+                            .padding(.horizontal, 16)
+                            .background(Color.white.opacity(0.08))
+                            .cornerRadius(22)
+                            .frame(maxWidth: .infinity)
+                            .submitLabel(.send)
+                            .autocorrectionDisabled()
+                            .textInputAutocapitalization(.sentences)
+                            .onSubmit {
+                                if !newMessage.isEmpty {
+                                    sendMessage()
+                                }
+                            }
+                        
+                        Button(action: sendMessage) {
+                            Image(systemName: "arrow.up.circle.fill")
+                                .font(.system(size: 32))
+                                .foregroundColor(newMessage.isEmpty ? Color.white.opacity(0.3) : .white)
+                        }
+                        .disabled(newMessage.isEmpty)
+                    }
+                    .padding()
+                }
+                .background(Color.white.opacity(0.04))
             }
-            .background(Color.gray.opacity(0.1))
         }
         .preferredColorScheme(.dark)
     }
@@ -307,14 +326,15 @@ struct MessageBubble: View {
             
             VStack(alignment: message.isUser ? .trailing : .leading, spacing: 4) {
                 Text(message.content)
+                    .font(.system(size: 17))
                     .padding(12)
-                    .background(message.isUser ? Color.blue : Color.gray.opacity(0.3))
-                    .foregroundColor(message.isUser ? .white : .primary)
+                    .background(message.isUser ? Color.white : Color.white.opacity(0.08))
+                    .foregroundColor(message.isUser ? .black : .white)
                     .cornerRadius(18)
                 
                 Text(dateFormatter.string(from: message.timestamp))
-                    .font(.caption2)
-                    .foregroundColor(.gray)
+                    .font(.system(size: 13))
+                    .foregroundColor(.white.opacity(0.5))
             }
             
             if !message.isUser { Spacer() }
@@ -329,7 +349,7 @@ struct TypingIndicator: View {
         HStack(spacing: 4) {
             ForEach(0..<3) { index in
                 Circle()
-                    .fill(Color.gray)
+                    .fill(Color.white.opacity(0.7))
                     .frame(width: 6, height: 6)
                     .opacity(phase == index ? 0.5 : 1.0)
             }

@@ -9,75 +9,83 @@ struct SignInView: View {
     @State private var errorMessage = ""
     
     var body: some View {
-        ZStack(alignment: .bottomLeading) {
-            VStack(spacing: 25) {
-                Text("welcome back")
-                    .font(Theme.headerStyle)
-                    .foregroundColor(Theme.textPrimary)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.top, Theme.screenPadding)
-                
-                VStack(spacing: 15) {
-                    TextField("email", text: $email)
-                        .textFieldStyle(CustomTextFieldStyle())
-                        .textContentType(.emailAddress)
+        ZStack {
+            Color.black.ignoresSafeArea()
+            VStack(spacing: 36) {
+                Spacer()
+                Text("Welcome back")
+                    .font(.system(size: 32, weight: .bold))
+                    .foregroundColor(.white)
+                    .multilineTextAlignment(.center)
+                    .padding(.bottom, 8)
+                VStack(spacing: 20) {
+                    TextField("Email", text: $email)
                         .autocapitalization(.none)
-                    
-                    SecureField("password", text: $password)
-                        .textFieldStyle(CustomTextFieldStyle())
+                        .textContentType(.emailAddress)
+                        .keyboardType(.emailAddress)
+                        .submitLabel(.next)
+                        .autocorrectionDisabled()
+                        .padding(.vertical, 16)
+                        .padding(.horizontal, 20)
+                        .background(Color.white.opacity(0.08))
+                        .foregroundColor(.white)
+                        .cornerRadius(22)
+                        .font(.system(size: 18))
+                    SecureField("Password", text: $password)
                         .textContentType(.password)
+                        .submitLabel(.done)
+                        .autocorrectionDisabled()
+                        .padding(.vertical, 16)
+                        .padding(.horizontal, 20)
+                        .background(Color.white.opacity(0.08))
+                        .foregroundColor(.white)
+                        .cornerRadius(22)
+                        .font(.system(size: 18))
                 }
-                
-                Button(action: signIn) {
-                    Text("sign in")
-                        .font(Theme.bodyStyle)
-                        .foregroundColor(Theme.textPrimary)
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Theme.buttonStyle(isProminent: true))
-                        .cornerRadius(Theme.cornerRadius)
+                .padding(.horizontal, 24)
+                VStack(spacing: 16) {
+                    Button(action: signIn) {
+                        Text("Sign In")
+                            .font(.system(size: 20, weight: .bold))
+                            .foregroundColor(.black)
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(Color.white)
+                            .cornerRadius(16)
+                    }
+                    Button(action: signUp) {
+                        Text("Create Account")
+                            .font(.system(size: 20, weight: .bold))
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(Color.white.opacity(0.13))
+                            .cornerRadius(16)
+                    }
+                    Button(action: continueAsGuest) {
+                        Text("Continue as Guest")
+                            .font(.system(size: 20, weight: .bold))
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(Color.white.opacity(0.13))
+                            .cornerRadius(16)
+                    }
                 }
-                
-                Button(action: signUp) {
-                    Text("create account")
-                        .font(Theme.bodyStyle)
-                        .foregroundColor(Theme.textPrimary)
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Theme.cardBackground)
-                        .cornerRadius(Theme.cornerRadius)
-                }
-                
-                Button(action: continueAsGuest) {
-                    Text("continue as guest")
-                        .font(Theme.bodyStyle)
-                        .foregroundColor(Theme.textPrimary)
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Theme.buttonStyle())
-                        .cornerRadius(Theme.cornerRadius)
-                }
-                
+                .padding(.horizontal, 24)
                 if !errorMessage.isEmpty {
                     Text(errorMessage)
                         .foregroundColor(.red)
-                        .font(.caption)
+                        .font(.system(size: 15))
                         .multilineTextAlignment(.center)
                         .padding(.top, 8)
                 }
-                
                 Spacer()
             }
-            .padding(Theme.screenPadding)
-            
-            Button(action: { hasCompletedOnboarding = false }) {
-                Image(systemName: "chevron.left")
-                    .foregroundColor(Theme.textSecondary)
-                    .imageScale(.large)
-                    .padding(20)
-            }
+            .padding(.vertical, 24)
+            .padding(.bottom, 16)
+            .animation(.easeInOut, value: errorMessage)
         }
-        .background(Theme.backgroundColor)
     }
     
     private func signIn() {
@@ -130,16 +138,6 @@ struct SignInView: View {
                 errorMessage = error.localizedDescription
             }
         }
-    }
-}
-
-struct CustomTextFieldStyle: TextFieldStyle {
-    func _body(configuration: TextField<Self._Label>) -> some View {
-        configuration
-            .padding()
-            .background(Theme.cardBackground)
-            .cornerRadius(Theme.cornerRadius)
-            .foregroundColor(Theme.textPrimary)
     }
 }
 

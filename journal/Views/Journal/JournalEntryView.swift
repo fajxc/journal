@@ -1,138 +1,148 @@
 import SwiftUI
+import Combine
 
 struct JournalEntryView: View {
     let prompt: ReflectionPrompt
     @Environment(\.dismiss) private var dismiss
-    @State private var title = ""
-    @State private var content = ""
-    @State private var mood: Mood = .neutral
-    @EnvironmentObject private var viewModel: JournalViewModel
+    @EnvironmentObject private var journalViewModel: JournalViewModel
     @EnvironmentObject private var tabViewModel: MainTabViewModel
     
-    enum Mood: String, CaseIterable {
-        case veryNegative = "very negative"
-        case negative = "negative"
-        case neutral = "neutral"
-        case positive = "positive"
-        case veryPositive = "very positive"
-    }
+    @State private var title = ""
+    @State private var content = ""
+    @State private var mood: String = "neutral"
+    @State private var appearAnimation = false
+    @State private var isSaving = false
+    
+    let moods = ["very negative", "negative", "neutral", "positive", "very positive"]
     
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
-                Text(prompt.fullPrompt)
-                    .font(Theme.bodyStyle)
-                    .foregroundColor(Theme.textSecondary)
-                    .padding(.top, Theme.screenPadding)
-                
-                TextField("title", text: $title)
-                    .font(Theme.bodyStyle)
-                    .textFieldStyle(CustomTextFieldStyle())
-                
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("mood")
-                        .font(Theme.captionStyle)
-                        .foregroundColor(Theme.textSecondary)
+        ZStack {
+            Color.black.ignoresSafeArea()
+            
+            ScrollView {
+                VStack(spacing: 24) {
+                    PromptHeader(prompt: prompt)
                     
-                    HStack(spacing: 8) {
-                        ForEach(Mood.allCases, id: \.self) { currentMood in
-                            Button(action: { mood = currentMood }) {
-                                Text(currentMood.rawValue)
-                                    .font(Theme.captionStyle)
-                                    .foregroundColor(mood == currentMood ? Theme.textPrimary : Theme.textSecondary)
-                                    .frame(maxWidth: .infinity)
-                                    .frame(height: 36)
-                                    .background(
-                                        RoundedRectangle(cornerRadius: Theme.cornerRadius)
-                                            .fill(mood == currentMood ? Theme.accentColor : Theme.cardBackground)
-                                    )
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: Theme.cornerRadius)
-                                            .stroke(mood == currentMood ? Theme.accentColor : Theme.textSecondary.opacity(0.2), lineWidth: 1)
-                                    )
+                    VStack(spacing: 16) {
+                        TextField("title", text: $title)
+                            .font(.system(size: 20, weight: .medium))
+                            .foregroundColor(.white)
+                            .padding(16)
+                            .background(Color.white.opacity(0.08))
+                            .cornerRadius(12)
+                            .submitLabel(.next)
+                            .autocorrectionDisabled()
+                            .textInputAutocapitalization(.words)
+                        
+                        TextEditor(text: $content)
+                            .font(.system(size: 16))
+                            .foregroundColor(.white)
+                            .frame(minHeight: 200)
+                            .padding(16)
+                            .background(Color.white.opacity(0.08))
+                            .cornerRadius(12)
+                            .submitLabel(.done)
+                            .autocorrectionDisabled()
+                            .textInputAutocapitalization(.sentences)
+                        
+                        // Mood Picker
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("mood")
+                                .font(.system(size: 15, weight: .semibold))
+                                .foregroundColor(.white.opacity(0.7))
+                            HStack(spacing: 8) {
+                                ForEach(moods, id: \ .self) { m in
+                                    Button(action: { mood = m }) {
+                                        Text(m.capitalized)
+                                            .font(.system(size: 13, weight: .bold))
+                                            .foregroundColor(mood == m ? .black : .white)
+                                            .padding(.horizontal, 12)
+                                            .padding(.vertical, 8)
+                                            .background(mood == m ? Color.white : Color.white.opacity(0.13))
+                                            .cornerRadius(14)
+                                    }
+                                }
                             }
                         }
                     }
                 }
-                
-                ZStack(alignment: .topLeading) {
-                    TextEditor(text: $content)
-                        .font(Theme.bodyStyle)
-                        .scrollContentBackground(.hidden)
-                        .frame(minHeight: 200)
-                        .padding()
-                        .background(Theme.cardBackground.opacity(0.4))
-                        .cornerRadius(Theme.cornerRadius)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: Theme.cornerRadius)
-                                .stroke(Theme.textSecondary.opacity(0.2), lineWidth: 1)
-                        )
-                    
-                    if content.isEmpty {
-                        Text("write your thoughts...")
-                            .font(Theme.bodyStyle)
-                            .foregroundColor(Theme.textSecondary.opacity(0.6))
-                            .padding(.horizontal)
-                            .padding(.vertical, 24)
-                            .allowsHitTesting(false)
-                    }
-                }
-                
-                Button(action: saveEntry) {
-                    Text("save entry")
-                        .font(Theme.bodyStyle)
-                        .foregroundColor(Theme.textPrimary)
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Theme.buttonStyle(isProminent: true))
-                        .cornerRadius(Theme.cornerRadius)
-                }
-                .disabled(title.isEmpty || content.isEmpty)
-                .padding(.top, 20)
+                .padding(24)
+                .opacity(appearAnimation ? 1 : 0)
+                .offset(y: appearAnimation ? 0 : 20)
             }
-            .padding(Theme.screenPadding)
         }
-        .background(Theme.backgroundColor)
+        .navigationTitle("new entry")
         .navigationBarTitleDisplayMode(.inline)
-        .navigationBarBackButtonHidden(true)
         .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) {
-                Button(action: { dismiss() }) {
-                    HStack(spacing: 4) {
-                        Image(systemName: "chevron.left")
-                            .foregroundColor(Theme.textSecondary)
-                            .imageScale(.large)
-                        Text("home")
-                            .foregroundColor(Theme.textSecondary)
-                            .font(Theme.bodyStyle)
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button(action: saveEntry) {
+                    if isSaving {
+                        ProgressView()
+                            .tint(.white)
+                    } else {
+                        Text("save")
+                            .foregroundColor(.white)
+                            .font(.system(size: 16, weight: .medium))
                     }
-                    .padding(.vertical, 4)
-                    .padding(.horizontal, 8)
-                    .background(Color.clear)
                 }
+                .disabled(title.isEmpty || content.isEmpty || isSaving)
             }
         }
-        .tint(Theme.textSecondary)
+        .onAppear {
+            withAnimation(.easeOut(duration: 0.5)) {
+                appearAnimation = true
+            }
+        }
     }
     
     private func saveEntry() {
+        isSaving = true
         let entry = JournalEntry(
+            date: Date(),
             title: title,
             content: content,
-            mood: mood.rawValue,
+            mood: mood,
             prompt: prompt
         )
-        viewModel.addEntry(entry)
         Task {
             do {
-                try await JournalService().uploadEntry(entry)
+                try await journalViewModel.addEntry(entry)
+                await MainActor.run {
+                    tabViewModel.selectedTab = .home
+                    dismiss()
+                }
             } catch {
-                print("Failed to upload entry to Supabase: \(error)")
+                print("Error saving entry: \(error)")
+                isSaving = false
             }
         }
-        // Switch to insights tab
-        tabViewModel.selectedTab = .insights
-        dismiss()
+    }
+}
+
+struct PromptHeader: View {
+    let prompt: ReflectionPrompt
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text(prompt.shortTitle)
+                .font(.system(size: 24, weight: .bold))
+                .foregroundColor(.white)
+            
+            Text(prompt.fullPrompt)
+                .font(.system(size: 16))
+                .foregroundColor(.white.opacity(0.6))
+                .lineLimit(3)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(24)
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(Color.white.opacity(0.08))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16)
+                        .stroke(Color.white.opacity(0.1), lineWidth: 1)
+                )
+        )
     }
 }
 

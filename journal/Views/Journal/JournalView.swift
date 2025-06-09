@@ -19,47 +19,52 @@ struct JournalView: View {
     
     var body: some View {
         NavigationView {
-            ScrollView {
-                VStack(spacing: 16) {
-                    if viewModel.entries.isEmpty {
-                        VStack(spacing: 12) {
-                            Image(systemName: "book.closed.fill")
-                                .font(.system(size: 48))
-                                .foregroundColor(Theme.textSecondary)
-                            Text("no entries yet")
-                                .font(Theme.bodyStyle)
-                                .foregroundColor(Theme.textSecondary)
-                            
-                            Button(action: { showingNewEntry = true }) {
-                                Text("start writing")
-                                    .font(Theme.bodyStyle)
-                                    .foregroundColor(Theme.textPrimary)
-                                    .frame(maxWidth: .infinity)
-                                    .padding()
-                                    .background(Theme.buttonStyle(isProminent: true))
-                                    .cornerRadius(Theme.cornerRadius)
+            ZStack {
+                Color.black.ignoresSafeArea()
+                ScrollView {
+                    VStack(spacing: 24) {
+                        if viewModel.entries.isEmpty {
+                            VStack(spacing: 20) {
+                                Image(systemName: "book.closed.fill")
+                                    .font(.system(size: 48))
+                                    .foregroundColor(Color.white.opacity(0.4))
+                                Text("No entries yet")
+                                    .font(.system(size: 22, weight: .bold))
+                                    .foregroundColor(.white)
+                                Button(action: { showingNewEntry = true }) {
+                                    Text("Start Writing")
+                                        .font(.system(size: 20, weight: .bold))
+                                        .foregroundColor(.black)
+                                        .frame(maxWidth: .infinity)
+                                        .padding()
+                                        .background(Color.white)
+                                        .cornerRadius(16)
+                                }
+                                .padding(.top, 20)
                             }
-                            .padding(.top, 20)
-                        }
-                        .frame(maxWidth: .infinity)
-                        .padding(.top, 100)
-                    } else {
-                        ForEach(viewModel.entries) { entry in
-                            JournalEntryRow(entry: entry)
+                            .frame(maxWidth: .infinity)
+                            .padding(.top, 100)
+                        } else {
+                            ForEach(viewModel.entries) { entry in
+                                JournalEntryRow(entry: entry)
+                            }
                         }
                     }
+                    .padding(.horizontal, 24)
+                    .padding(.top, 24)
                 }
-                .padding()
             }
-            .background(Theme.backgroundColor)
-            .navigationTitle("journal")
+            .navigationTitle("Journal")
             .navigationBarTitleDisplayMode(.large)
             .preferredColorScheme(.dark)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(action: { showingNewEntry = true }) {
                         Image(systemName: "square.and.pencil")
-                            .foregroundColor(Theme.accentColor)
+                            .foregroundColor(.white)
+                            .padding(10)
+                            .background(Color.white.opacity(0.08))
+                            .clipShape(Circle())
                     }
                 }
             }
@@ -91,57 +96,51 @@ struct JournalEntry: Identifiable {
 
 struct JournalEntryRow: View {
     let entry: JournalEntry
-    
     private let dateFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
         return formatter
     }()
-    
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Text(entry.title)
-                    .font(Theme.bodyStyle)
-                    .foregroundColor(Theme.textPrimary)
+                    .font(.system(size: 20, weight: .bold))
+                    .foregroundColor(.white)
                 Spacer()
                 Text(dateFormatter.string(from: entry.date))
-                    .font(Theme.captionStyle)
-                    .foregroundColor(Theme.textSecondary)
+                    .font(.system(size: 15))
+                    .foregroundColor(Color.white.opacity(0.5))
             }
-            
             if let prompt = entry.prompt {
                 Text(prompt.shortTitle)
-                    .font(Theme.captionStyle)
-                    .foregroundColor(Theme.textSecondary)
+                    .font(.system(size: 15))
+                    .foregroundColor(Color.white.opacity(0.5))
             }
-            
             Text(entry.content)
-                .font(Theme.bodyStyle)
-                .foregroundColor(Theme.textSecondary)
+                .font(.system(size: 17))
+                .foregroundColor(Color.white.opacity(0.8))
                 .lineLimit(3)
-            
             HStack {
                 Image(systemName: "heart.fill")
                     .foregroundColor(moodColor(for: entry.mood))
-                Text(entry.mood)
-                    .font(Theme.captionStyle)
-                    .foregroundColor(Theme.textSecondary)
+                Text(entry.mood.capitalized)
+                    .font(.system(size: 15))
+                    .foregroundColor(Color.white.opacity(0.7))
             }
         }
-        .padding()
-        .background(Theme.cardBackground)
-        .cornerRadius(Theme.cornerRadius)
+        .padding(20)
+        .background(Color.white.opacity(0.04))
+        .cornerRadius(16)
     }
-    
     private func moodColor(for mood: String) -> Color {
         switch mood.lowercased() {
         case "very positive": return .green
         case "positive": return .blue
-        case "neutral": return Theme.textSecondary
+        case "neutral": return Color.white.opacity(0.5)
         case "negative": return .orange
         case "very negative": return .red
-        default: return Theme.textSecondary
+        default: return Color.white.opacity(0.5)
         }
     }
 }

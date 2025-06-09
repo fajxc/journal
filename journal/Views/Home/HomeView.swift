@@ -29,19 +29,17 @@ struct HomeView: View {
     
     var body: some View {
         ZStack {
-            Theme.backgroundColor.ignoresSafeArea()
-            VStack(spacing: 24) {
+            Color.black.ignoresSafeArea()
+            VStack(spacing: 32) {
                 // Header
                 HStack {
                     Text("be great.")
-                        .font(Theme.headerStyle)
-                        .fontWeight(.semibold)
+                        .font(.system(size: 32, weight: .bold))
                         .foregroundColor(.white)
                     Spacer()
                 }
-                .padding(.horizontal, Theme.screenPadding)
+                .padding(.horizontal, 24)
                 .padding(.top, 8)
-                
                 // Weekday Scroll
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 12) {
@@ -54,7 +52,7 @@ struct HomeView: View {
                                     if moodValue > 0.6 { return .green.opacity(0.4) }
                                     if moodValue < 0.4 { return .red.opacity(0.4) }
                                 }
-                                return isToday ? Color(hex: "2C2C2E") : Theme.cardBackground
+                                return isToday ? Color.white.opacity(0.12) : Color.white.opacity(0.06)
                             }()
                             VStack(spacing: 4) {
                                 Text(day)
@@ -77,55 +75,47 @@ struct HomeView: View {
                             .onTapGesture { selectedDate = date }
                         }
                     }
-                    .padding(.horizontal, Theme.screenPadding)
+                    .padding(.horizontal, 24)
                 }
                 .padding(.vertical, 8)
-                
                 // Reframe Input + Button
                 HStack(spacing: 12) {
                     TextField("reframe", text: $reframeText)
-                        .padding(.vertical, 14)
-                        .padding(.horizontal, 16)
-                        .background(Theme.cardBackground)
+                        .padding(.vertical, 16)
+                        .padding(.horizontal, 20)
+                        .background(Color.white.opacity(0.08))
                         .foregroundColor(.white)
-                        .cornerRadius(Theme.cornerRadius)
-                        .font(Theme.bodyStyle)
+                        .cornerRadius(22)
+                        .font(.system(size: 18))
                         .disableAutocorrection(true)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: Theme.cornerRadius)
-                                .stroke(Color.clear, lineWidth: 0)
-                        )
+                        .submitLabel(.done)
+                        .textInputAutocapitalization(.sentences)
                     Button(action: { /* reframe action */ }) {
                         Text("reframe")
-                            .font(Theme.bodyStyle)
-                            .fontWeight(.semibold)
-                            .foregroundColor(.white)
-                            .padding(.vertical, 12)
-                            .padding(.horizontal, 20)
-                            .background(Color(hex: "2C2C2E"))
-                            .cornerRadius(Theme.cornerRadius)
+                            .font(.system(size: 18, weight: .bold))
+                            .foregroundColor(.black)
+                            .padding(.vertical, 14)
+                            .padding(.horizontal, 28)
+                            .background(Color.white)
+                            .cornerRadius(22)
                     }
                 }
-                .padding(.horizontal, Theme.screenPadding)
-                
+                .padding(.horizontal, 24)
                 // Today Section
-                VStack(alignment: .leading, spacing: 12) {
+                VStack(alignment: .leading, spacing: 16) {
                     Text("Today")
-                        .font(Theme.headerStyle)
-                        .fontWeight(.bold)
+                        .font(.system(size: 24, weight: .bold))
                         .foregroundColor(.white)
-                        .padding(.bottom, 2)
                     HStack(spacing: 16) {
                         TodayBox(title: "Seneca", subtitle: "Ask me anything", imageName: "person.crop.circle", action: { tabViewModel.selectedTab = .journal })
                         TodayBox(title: "Marcus Aurelius", subtitle: "Quote of the day", imageName: "person.crop.circle.fill", action: { tabViewModel.selectedTab = .pause })
                     }
                 }
-                .padding(.horizontal, Theme.screenPadding)
-                
+                .padding(.horizontal, 24)
                 // Sleep Quality & Mood Sliders
                 VStack(alignment: .leading, spacing: 20) {
                     Text("today's stats")
-                        .font(.system(size: 17, weight: .semibold))
+                        .font(.system(size: 18, weight: .semibold))
                         .foregroundColor(.white)
                     HStack {
                         Text("Sleep")
@@ -143,11 +133,10 @@ struct HomeView: View {
                     .accentColor(.white)
                     .opacity(sleepQualitySet ? 0.5 : 1.0)
                     .frame(height: 8)
-                    .background(Theme.cardBackground)
+                    .background(Color.white.opacity(0.08))
                     .cornerRadius(4)
-
                     Text("Mood")
-                        .font(.system(size: 17, weight: .semibold))
+                        .font(.system(size: 18, weight: .semibold))
                         .foregroundColor(.white)
                     HStack {
                         Text("Mood")
@@ -169,16 +158,14 @@ struct HomeView: View {
                     .accentColor(.white)
                     .opacity(moodSet ? 0.5 : 1.0)
                     .frame(height: 8)
-                    .background(Theme.cardBackground)
+                    .background(Color.white.opacity(0.08))
                     .cornerRadius(4)
                 }
-                .padding(.horizontal, Theme.screenPadding)
-                
+                .padding(.horizontal, 24)
                 // Inspiration Section
-                VStack(alignment: .leading, spacing: 12) {
+                VStack(alignment: .leading, spacing: 16) {
                     Text("Inspiration")
-                        .font(Theme.headerStyle)
-                        .fontWeight(.bold)
+                        .font(.system(size: 24, weight: .bold))
                         .foregroundColor(.white)
                     HStack(spacing: 16) {
                         VStack(alignment: .leading, spacing: 4) {
@@ -191,7 +178,7 @@ struct HomeView: View {
                         }
                         Spacer()
                         Rectangle()
-                            .fill(Theme.cardBackground)
+                            .fill(Color.white.opacity(0.08))
                             .frame(width: 48, height: 64)
                             .overlay(
                                 Text("cover")
@@ -201,10 +188,10 @@ struct HomeView: View {
                             .cornerRadius(8)
                     }
                     .padding(12)
-                    .background(Theme.cardBackground)
-                    .cornerRadius(Theme.cornerRadius)
+                    .background(Color.white.opacity(0.04))
+                    .cornerRadius(16)
                 }
-                .padding(.horizontal, Theme.screenPadding)
+                .padding(.horizontal, 24)
                 Spacer(minLength: 24)
             }
             .padding(.top, 8)
@@ -216,7 +203,7 @@ struct TodayBox: View {
     let title: String
     let subtitle: String
     let imageName: String
-    let fixedHeight: CGFloat = 92 // matches the taller box in the screenshot
+    let fixedHeight: CGFloat = 92
     var action: (() -> Void)? = nil
     var body: some View {
         Button(action: { action?() }) {
@@ -227,17 +214,15 @@ struct TodayBox: View {
                         .foregroundColor(.white)
                         .lineLimit(1)
                         .truncationMode(.tail)
-                    ScrollView(.vertical, showsIndicators: false) {
-                        Text(subtitle)
-                            .font(.system(size: 15, weight: .regular))
-                            .foregroundColor(.white.opacity(0.8))
-                            .frame(maxHeight: 40, alignment: .top)
-                    }
+                    Text(subtitle)
+                        .font(.system(size: 15, weight: .regular))
+                        .foregroundColor(.white.opacity(0.8))
+                        .lineLimit(2)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 Spacer(minLength: 0)
                 Rectangle()
-                    .fill(Theme.cardBackground)
+                    .fill(Color.white.opacity(0.08))
                     .frame(width: 40, height: 40)
                     .overlay(
                         Image(systemName: imageName)
@@ -248,14 +233,10 @@ struct TodayBox: View {
                     )
                     .cornerRadius(8)
             }
-            .padding(12)
+            .padding(16)
             .frame(height: fixedHeight)
-            .background(Theme.cardBackground)
-            .cornerRadius(Theme.cornerRadius)
-            .overlay(
-                RoundedRectangle(cornerRadius: Theme.cornerRadius)
-                    .stroke(Color.white.opacity(0.08), lineWidth: 1)
-            )
+            .background(Color.white.opacity(0.04))
+            .cornerRadius(16)
         }
         .buttonStyle(PlainButtonStyle())
     }

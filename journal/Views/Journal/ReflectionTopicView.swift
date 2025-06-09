@@ -4,20 +4,28 @@ struct ReflectionTopicView: View {
     @Binding var isPresented: Bool
     @Environment(\.dismiss) private var dismiss
     @State private var selectedTopic: ReflectionTopic?
+    @State private var appearAnimation = false
     
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(spacing: 16) {
-                    ForEach(ReflectionData.topics) { topic in
-                        NavigationLink(destination: ReflectionPromptView(topic: topic)) {
-                            TopicCard(topic: topic)
+            ZStack {
+                Color.black.ignoresSafeArea()
+                
+                ScrollView {
+                    VStack(spacing: 24) {
+                        ForEach(ReflectionData.topics) { topic in
+                            NavigationLink(destination: ReflectionPromptView(topic: topic)) {
+                                TopicCard(topic: topic)
+                            }
+                            .buttonStyle(PlainButtonStyle())
                         }
                     }
+                    .padding(.horizontal, 24)
+                    .padding(.vertical, 32)
+                    .opacity(appearAnimation ? 1 : 0)
+                    .offset(y: appearAnimation ? 0 : 20)
                 }
-                .padding(Theme.screenPadding)
             }
-            .background(Theme.backgroundColor)
             .navigationTitle("choose a topic")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -38,9 +46,13 @@ struct ReflectionTopicView: View {
                         .padding(.vertical, 4)
                         .padding(.horizontal, 8)
                         .background(Color.clear)
-                        .transition(.opacity.combined(with: .scale))
                     }
                 }
+            }
+        }
+        .onAppear {
+            withAnimation(.easeOut(duration: 0.5)) {
+                appearAnimation = true
             }
         }
     }
@@ -50,15 +62,26 @@ struct TopicCard: View {
     let topic: ReflectionTopic
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 12) {
             Text(topic.title)
-                .font(Theme.bodyStyle)
-                .foregroundColor(Theme.textPrimary)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(Theme.screenPadding)
+                .font(.system(size: 20, weight: .semibold))
+                .foregroundColor(.white)
+            
+            Text("\(topic.prompts.count) prompts")
+                .font(.system(size: 15))
+                .foregroundColor(.white.opacity(0.6))
         }
-        .background(Theme.cardBackground)
-        .cornerRadius(Theme.cornerRadius)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(24)
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(Color.white.opacity(0.08))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16)
+                        .stroke(Color.white.opacity(0.1), lineWidth: 1)
+                )
+        )
+        .contentShape(Rectangle())
     }
 }
 
