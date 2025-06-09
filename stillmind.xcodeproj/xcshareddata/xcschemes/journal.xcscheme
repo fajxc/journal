@@ -16,8 +16,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "9BF65B962DE97278003E5CB1"
-               BuildableName = "journal.app"
-               BlueprintName = "journal"
+               BuildableName = "stillmind..app"
+               BlueprintName = "stillmind."
                ReferencedContainer = "container:journal.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -69,8 +69,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "9BF65B962DE97278003E5CB1"
-            BuildableName = "journal.app"
-            BlueprintName = "journal"
+            BuildableName = "stillmind..app"
+            BlueprintName = "stillmind."
             ReferencedContainer = "container:journal.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
@@ -93,8 +93,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "9BF65B962DE97278003E5CB1"
-            BuildableName = "journal.app"
-            BlueprintName = "journal"
+            BuildableName = "stillmind..app"
+            BlueprintName = "stillmind."
             ReferencedContainer = "container:journal.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
