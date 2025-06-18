@@ -12,6 +12,23 @@ struct SignInView: View {
         ZStack {
             Color.black.ignoresSafeArea()
             VStack(spacing: 36) {
+                // Back button
+                HStack {
+                    Button(action: {
+                        hasCompletedOnboarding = false
+                    }) {
+                        HStack(spacing: 4) {
+                            Image(systemName: "chevron.left")
+                            Text("Onboarding")
+                        }
+                        .foregroundColor(.white)
+                        .font(.system(size: 16, weight: .medium))
+                    }
+                    .padding(.leading, 24)
+                    Spacer()
+                }
+                .padding(.top, 16)
+                
                 Spacer()
                 Text("Welcome back")
                     .font(.system(size: 32, weight: .bold))

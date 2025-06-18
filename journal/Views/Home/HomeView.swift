@@ -107,8 +107,12 @@ struct HomeView: View {
                         .font(.system(size: 24, weight: .bold))
                         .foregroundColor(.white)
                     HStack(spacing: 16) {
-                        TodayBox(title: "Seneca", subtitle: "Ask me anything", imageName: "person.crop.circle", action: { tabViewModel.selectedTab = .journal })
-                        TodayBox(title: "Marcus Aurelius", subtitle: "Quote of the day", imageName: "person.crop.circle.fill", action: { tabViewModel.selectedTab = .pause })
+                        HomeCard(title: "Seneca", subtitle: "Ask me anything", icon: "person.crop.circle") {
+                            tabViewModel.selectedTab = .journal
+                        }
+                        HomeCard(title: "Quote of the day", subtitle: "", icon: "quote.bubble") {
+                            tabViewModel.selectedTab = .pause
+                        }
                     }
                 }
                 .padding(.horizontal, 24)
